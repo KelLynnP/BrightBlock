@@ -2,6 +2,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+
 const char* ssid = "GparksB";
 const char* password = "4rustypaintcan";
 const char* serverName = "https://bb-vercel-kellynnp.vercel.app/api/hello";
@@ -16,14 +17,19 @@ void setup() {
   Serial.println("Connected to WiFi");
 }
 
+int num; 
+
 void loop() {
-  for (int i = 0; i < 10; i++) {
-    int randomNumber = random(0, 100); // generate a random number between 0 and 100
-    postData(randomNumber);
-    delay(2000); // wait for 1 second before generating the next random number
-  }
+  num = generateRand();
+  postData(num);
   delay(2000); // wait for 1 second before exiting the loop
 }
+
+int generateRand(){
+  return random(0, 100); // generate a random number between 0 and 100
+}
+
+
 
 void postData(int randomNumber) {
   if (WiFi.status() == WL_CONNECTED) {
