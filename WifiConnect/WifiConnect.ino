@@ -11,7 +11,6 @@ const char* ssid ="GparksB"; // "Prosperity";
 const char* password = "4rustypaintcan"; //"f0revery0ne"; // 
 const char* serverName = "https://bb-vercel-kellynnp.vercel.app/api/hello";
 
-
 //Variable and Function definitions 
 #define GPSSerial Serial1
 Adafruit_GPS GPS(&GPSSerial);
@@ -39,33 +38,6 @@ BMEData getBMEData() {
   BME.humidity = bme.readHumidity();
   BME.pressure = bme.readPressure() / 100.0F;
   return BME;
-}
-
-void printGPSData() {
-  if (Serial.available()) {
-    char c = Serial.read();
-    GPSSerial.write(c);
-  }
-  if (GPSSerial.available()) {
-    char c = GPSSerial.read();
-    Serial.write(c);
-  }
-
-  // int count = 0;
-  // while (Serial1.available()) {
-  //   if (count > 10 ){
-  //     count = count + 1;
-  //     char c = Serial1.read();
-  //     Serial.print(c);
-  //     delay(2000);
-  //   }
-  //   else {
-  //       Serial.print("Hitting count");
-  //     return;
-  //   }
-  // }
-  // Serial.print("Sure not finding serial 1 available");
-
 }
 
 void postData(int randomNumber, float temperature, float humidity, float pressure, float latitude, float longitude, float altitude) {
@@ -101,7 +73,7 @@ void postData(int randomNumber, float temperature, float humidity, float pressur
   }
 }
 
-GPSData GPSHardwareSerialParsing(){
+GPSData GPS_ConstantReadNStore(){
   GPSData TempGPS;
   memset(TempGPS.TimeStamp, 0, sizeof(TempGPS.TimeStamp));  TempGPS.latitude = 0;
   TempGPS.longitude = 0;
@@ -159,7 +131,7 @@ void loop() // run over and over again
 
   // GPS DATA LOGGING CONSTANTLY
   // Set gps data to a temp variable
-  GPSHardwareSerialParsing();// pull new data
+  GPS_ConstantReadNStore();// pull new data
   // check to see if is null or not 
   // replace with temp variable if real data
 
