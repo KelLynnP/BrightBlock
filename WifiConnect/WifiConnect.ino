@@ -1,20 +1,25 @@
+#include <WiFi.h>
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
-#include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME680.h>
 
 // User input info!
-const char* ssid = "GparksB";
-const char* password = "4rustypaintcan";
+const char* ssid ="GparksB"; // "Prosperity";
+const char* password = "4rustypaintcan"; //"f0revery0ne"; // 
 const char* serverName = "https://bb-vercel-kellynnp.vercel.app/api/hello";
 
 
 //Variable and Function definitions 
+#define GPSSerial Serial1
+Adafruit_GPS GPS(&GPSSerial);
+#define GPSECHO false
 Adafruit_BME680 bme; // Initialize the BME688 sensor object
-Adafruit_GPS GPS(&Serial1);
+uint32_t timer = millis();
+// Adafruit_GPS GPS(&Serial1);
+
 struct BMEData{
   float temperature;
   float humidity;
@@ -22,6 +27,7 @@ struct BMEData{
 };
 
 struct GPSData{
+  char TimeStamp[20];
   float latitude;
   float longitude;
   float altitude;
@@ -35,37 +41,30 @@ BMEData getBMEData() {
   return BME;
 }
 
-GPSData getGPSData() {
-  GPSData GPS_Data;
-  char c = GPS.read();
-  if (GPS.newNMEAreceived()) {
-    if (!GPS.parse(GPS.lastNMEA())) {
-      return GPS_Data;
-    }
-  }
-  if (GPS.fix) {
-    GPS.latitude = GPS.latitudeDegrees;
-    GPS.longitude = GPS.longitudeDegrees;
-    GPS.altitude = GPS.altitude / 100.0F;
-  }
-  return GPS_Data;
-}
-
 void printGPSData() {
-  int count = 0;
-  while (Serial1.available()) {
-    if (count > 10 ){
-      count = count + 1;
-      char c = Serial1.read();
-      Serial.print(c);
-      delay(2000);
-    }
-    else {
-        Serial.print("Hitting count");
-      return;
-    }
+  if (Serial.available()) {
+    char c = Serial.read();
+    GPSSerial.write(c);
   }
-  Serial.print("Sure not finding serial 1 available");
+  if (GPSSerial.available()) {
+    char c = GPSSerial.read();
+    Serial.write(c);
+  }
+
+  // int count = 0;
+  // while (Serial1.available()) {
+  //   if (count > 10 ){
+  //     count = count + 1;
+  //     char c = Serial1.read();
+  //     Serial.print(c);
+  //     delay(2000);
+  //   }
+  //   else {
+  //       Serial.print("Hitting count");
+  //     return;
+  //   }
+  // }
+  // Serial.print("Sure not finding serial 1 available");
 
 }
 
@@ -102,34 +101,75 @@ void postData(int randomNumber, float temperature, float humidity, float pressur
   }
 }
 
-int generateRand(){
-  return random(0, 100); // generate a random number between 0 and 100
+GPSData GPSHardwareSerialParsing(){
+  GPSData TempGPS;
+  memset(TempGPS.TimeStamp, 0, sizeof(TempGPS.TimeStamp));  TempGPS.latitude = 0;
+  TempGPS.longitude = 0;
+  TempGPS.altitude = 0;
+  char c = GPS.read(); // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT
+  // Serial.print(c); // if you want to debug, this is a good time to do it!
+  if (GPSECHO)
+    if (c) Serial.print(c); // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) { // a tricky thing here is if we print the NMEA sentence, or data // we end up not listening and catching other sentences! // so be very wary if using OUTPUT_ALLDATA and trying to print out data
+    // Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
+      return TempGPS; // we can fail to parse a sentence in which case we should just wait for another
+  }
+
+  if (millis() - timer > 2000) {   // aprox save every 2
+    timer = millis(); // reset the timer
+    char timestamp[20];     // get the current time from the GPS and format it into the timestamp variable
+    sprintf(timestamp, "%02d:%02d:%02d %02d/%02d/%04d", GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
+    // Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    // Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+    if (GPS.fix) {
+      TempGPS.latitude = GPS.latitude;
+      TempGPS.longitude = GPS.longitude;
+      TempGPS.altitude = GPS.altitude;
+      // Serial.print(TempGPS.altitude);
+    }
+  }
+  return TempGPS;
 }
 
 void setup() {
   Serial.begin(115200);
+  // Wifi Set up
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
+
+  GPSSerial.begin(9600); //9600 Default buad rate for Ultimate GPS
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
+
   if (!bme.begin()) {
     Serial.println("Could not find BME688 sensor!");
   }
-}
 
-void loop() {
-  // int randomNumber = generateRand();
+}
+void loop() // run over and over again
+{
+  // Set timer
+ //----------------------------------
+
+
+  // GPS DATA LOGGING CONSTANTLY
+  // Set gps data to a temp variable
+  GPSHardwareSerialParsing();// pull new data
+  // check to see if is null or not 
+  // replace with temp variable if real data
+
+ // Pull sample rlate
+
+ // if frequency then pull a bunch of sensor data 
+  //----------------------------------
 
   // BMEData BME; 
   // BME = getBMEData();
+  
 
-  // GPSData GPS;
-  // GPS = getGPSData();
-  printGPSData();
-  // postData(randomNumber, BME.temperature, BME.humidity, BME.pressure, GPS.latitude, GPS.longitude, GPS.altitude);
-  delay(2000);
 }
-
-
