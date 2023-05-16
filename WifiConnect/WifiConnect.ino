@@ -16,7 +16,10 @@ const char* serverName = "https://bb-vercel-kellynnp.vercel.app/api/hello";
 Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 Adafruit_BME680 bme; // Initialize the BME688 sensor object
-uint32_t timer = millis();
+uint32_t GpsTimer = millis();
+uint32_t GlobalTimer = millis();
+bool First = true;
+int SamplingRate = 10000; // .1 Hz freqnecy
 // Adafruit_GPS GPS(&Serial1);
 
 struct BMEData{
@@ -24,6 +27,12 @@ struct BMEData{
   float humidity;
   float pressure;
 };
+
+// struct ICMData{
+//   float temperature;
+//   float humidity;
+//   float pressure;
+// };
 
 struct GPSData{
   char TimeStamp[20];
@@ -40,13 +49,13 @@ BMEData getBMEData() {
   return BME;
 }
 
-void postData(int randomNumber, float temperature, float humidity, float pressure, float latitude, float longitude, float altitude) {
+void postData(char TimeStamp[20], float temperature, float humidity, float pressure, float latitude, float longitude, float altitude) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
     DynamicJsonDocument jsonDoc(1024);
-    jsonDoc["value"] = randomNumber;
+    jsonDoc["TimeStamp"] = TimeStamp;
     jsonDoc["temperature"] = temperature;
     jsonDoc["humidity"] = humidity;
     jsonDoc["pressure"] = pressure;
@@ -75,9 +84,10 @@ void postData(int randomNumber, float temperature, float humidity, float pressur
 
 GPSData GPS_ConstantReadNStore(){
   GPSData TempGPS;
-  memset(TempGPS.TimeStamp, 0, sizeof(TempGPS.TimeStamp));  TempGPS.latitude = 0;
-  TempGPS.longitude = 0;
-  TempGPS.altitude = 0;
+  memset(TempGPS.TimeStamp, -1, sizeof(TempGPS.TimeStamp));  
+  TempGPS.latitude = -1;
+  TempGPS.longitude = -1;
+  TempGPS.altitude = -1;
   char c = GPS.read(); // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT
   // Serial.print(c); // if you want to debug, this is a good time to do it!
   if (GPSECHO)
@@ -88,17 +98,17 @@ GPSData GPS_ConstantReadNStore(){
       return TempGPS; // we can fail to parse a sentence in which case we should just wait for another
   }
 
-  if (millis() - timer > 2000) {   // aprox save every 2
-    timer = millis(); // reset the timer
+  if (millis() - GpsTimer > 2000) {   // aprox save every 2
+    GpsTimer = millis(); // reset the timer
     char timestamp[20];     // get the current time from the GPS and format it into the timestamp variable
     sprintf(timestamp, "%02d:%02d:%02d %02d/%02d/%04d", GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
-    // Serial.print("Fix: "); Serial.print((int)GPS.fix);
-    // Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+    Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
     if (GPS.fix) {
       TempGPS.latitude = GPS.latitude;
       TempGPS.longitude = GPS.longitude;
       TempGPS.altitude = GPS.altitude;
-      // Serial.print(TempGPS.altitude);
+      Serial.print(TempGPS.latitude);
     }
   }
   return TempGPS;
@@ -125,23 +135,21 @@ void setup() {
 }
 void loop() // run over and over again
 {
-  // Set timer
- //----------------------------------
+  GPSData ValidGPSData;
+  GPSData MaybeNullGPSData = GPS_ConstantReadNStore();
 
-
-  // GPS DATA LOGGING CONSTANTLY
-  // Set gps data to a temp variable
-  GPS_ConstantReadNStore();// pull new data
-  // check to see if is null or not 
-  // replace with temp variable if real data
-
+  // Serial.println(MaybeNullGPSData.latitude);
+  if (MaybeNullGPSData.latitude != -1.0){ // Flag for not set to a true value
+    ValidGPSData = MaybeNullGPSData;
+    // Serial.println(ValidGPSData.latitude);
+  }
  // Pull sample rlate
+  if (millis() - GlobalTimer > SamplingRate ) {   // aprox save every 2
+    GlobalTimer = millis(); // reset the timer
 
- // if frequency then pull a bunch of sensor data 
-  //----------------------------------
+    BMEData BME; 
+    BME = getBMEData();
 
-  // BMEData BME; 
-  // BME = getBMEData();
-  
-
+    postData(ValidGPSData.TimeStamp, BME.temperature, BME.humidity, BME.pressure, ValidGPSData.latitude, ValidGPSData.longitude, ValidGPSData.altitude);
+  }
 }
