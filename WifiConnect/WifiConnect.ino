@@ -127,7 +127,7 @@ GPSData GPS_ConstantReadNStore(){
   TempGPS.longitude = -1;
   TempGPS.altitude = -1;
   char c = GPS.read(); // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT
-  // Serial.print(c); // if you want to debug, this is a good time to do it!
+  // Serial.print(c); // SHOWS ALL THE NMEA STRINGS! PRINT AT UR OWN RISK :) 
   if (GPSECHO)
     if (c) Serial.print(c); // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) { // a tricky thing here is if we print the NMEA sentence, or data // we end up not listening and catching other sentences! // so be very wary if using OUTPUT_ALLDATA and trying to print out data
@@ -140,13 +140,14 @@ GPSData GPS_ConstantReadNStore(){
     GpsTimer = millis(); // reset the timer
     char timestamp[20];     // get the current time from the GPS and format it into the timestamp variable
     sprintf(timestamp, "%02d:%02d:%02d %02d/%02d/%04d", GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
-    Serial.print("Fix: "); Serial.print((int)GPS.fix);
-    Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+    // ~~~~~~~~~~~~~~~~~~~ Run these lines to debug ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~// 
+    // Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    // Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
     if (GPS.fix) {
       TempGPS.latitude = GPS.latitude;
       TempGPS.longitude = GPS.longitude;
       TempGPS.altitude = GPS.altitude;
-      Serial.print(TempGPS.latitude);
+      // Serial.print(TempGPS.latitude);
     }
   }
   return TempGPS;
