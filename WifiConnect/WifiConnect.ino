@@ -21,6 +21,9 @@ Adafruit_BME680 bme; // Initialize the BME688 sensor object
 Adafruit_ICM20948 icm; // Initialize the ICM209448 sensor object
 uint32_t GpsTimer = millis();
 uint32_t GlobalTimer = millis();
+const int buttonPin = 25;  // the number of the pushbutton pin
+int buttonState = 0;
+
 
 struct BMEData{
   float temperature;
@@ -155,6 +158,7 @@ GPSData GPS_ConstantReadNStore(){
 
 void setup() {
   Serial.begin(115200);
+  pinMode(buttonPin, INPUT);
   // Wifi Set up
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -270,11 +274,12 @@ void setup() {
 void loop() // run over and over again
 {
   GPSData ValidGPSData;
-  GPSData MaybeNullGPSData = GPS_ConstantReadNStore();
-
+  GPSData MaybeNullGPSData = GPS_ConstantReadNStore(); //yelling into void! Hello GPS are you still there 
+  buttonState = digitalRead(buttonPin);
+  // Serial.println(buttonState);
   // Serial.println(MaybeNullGPSData.latitude);
   if (MaybeNullGPSData.latitude != -1.0){ // Flag for not set to a true value
-  ///___________  THIS LINE DOES NOT APPEAR TO BE WORKING WELL _________________
+  ///___________  FIXME: THIS LINE DOES NOT APPEAR TO BE WORKING WELL _________________
     ValidGPSData = MaybeNullGPSData; 
     // Serial.println(ValidGPSData.latitude);
   }
@@ -283,6 +288,6 @@ void loop() // run over and over again
     GlobalTimer = millis(); // reset the timer
     BMEData BME = getBMEData();
     ICMData ICM = getICMData();
-    postData(ValidGPSData.TimeStamp, BME.temperature, BME.humidity, BME.pressure, ValidGPSData.latitude, ValidGPSData.longitude, ValidGPSData.altitude, ICM.AccelX, ICM.AccelY, ICM.AccelZ, ICM.GyroX, ICM.GyroY, ICM.GyroZ);
+    // postData(ValidGPSData.TimeStamp, BME.temperature, BME.humidity, BME.pressure, ValidGPSData.latitude, ValidGPSData.longitude, ValidGPSData.altitude, ICM.AccelX, ICM.AccelY, ICM.AccelZ, ICM.GyroX, ICM.GyroY, ICM.GyroZ);
   }
 }
