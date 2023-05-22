@@ -129,12 +129,12 @@ void TestPostData() {
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
     DynamicJsonDocument jsonDoc(1024);
-    // jsonDoc["TimeStamp"] = "Hello World";
+    jsonDoc["TimeStamp"] = "Hello World";
     String postData;
-    // serializeJson(jsonDoc, postData);
+    serializeJson(jsonDoc, postData);
     // Serial.print(postData);
     // Serial.println();
-    int httpResponseCode = http.GET();
+    int httpResponseCode = http.POST(postData);
     if (httpResponseCode == 200) { 
       // Serial.print("HTTP Response code: ");
       // Serial.println(httpResponseCode);
