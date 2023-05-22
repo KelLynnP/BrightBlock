@@ -8,9 +8,9 @@
 #include <Adafruit_ICM20948.h>
 
 ///~~~~~~~~~~~~~~~~~~  User input info! ~~~~~~~~~~~~~~~~~~  //
-const char* ssid ="GparksB"; // "Prosperity";
-const char* password = "4rustypaintcan"; //"f0revery0ne"; // 
-const char* serverName = "https://bb-vercel-kellynnp.vercel.app/api/hello";
+const char* ssid ="Prosperity"; //"GparksB"; // 
+const char* password ="f0revery0ne"; //  "4rustypaintcan"; //
+const char* serverName = "https://bb-vercel.vercel.app/api/hello";
 int SamplingRate = 10000; // .1 Hz freqnecy
 
 ///~~~~~~~~~~~~~~~~~~  Variable and Function definitions  ~~~~~~~~~~~~~~~~~~  //
@@ -105,12 +105,39 @@ void postData(char TimeStamp[20], float temperature, float humidity, float press
     jsonDoc["GyroZ"] = GyroZ;
     String postData;
     serializeJson(jsonDoc, postData);
-    Serial.print(postData);
-    Serial.println();
+    // Serial.print(postData);
+    // Serial.println();
     int httpResponseCode = http.POST(postData);
-    if (httpResponseCode > 0) {
-      Serial.print("HTTP Response code: ");
+    if (httpResponseCode == 200) { 
+      // Serial.print("HTTP Response code: ");
+      // Serial.println(httpResponseCode);
+      String response = http.getString();
+      Serial.println(response);
+    } else {
+      Serial.print("Error in posting data. HTTP Error code: ");
       Serial.println(httpResponseCode);
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi Disconnected");
+  }
+}
+
+void TestPostData() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverName);
+    http.addHeader("Content-Type", "application/json");
+    DynamicJsonDocument jsonDoc(1024);
+    // jsonDoc["TimeStamp"] = "Hello World";
+    String postData;
+    // serializeJson(jsonDoc, postData);
+    // Serial.print(postData);
+    // Serial.println();
+    int httpResponseCode = http.GET();
+    if (httpResponseCode == 200) { 
+      // Serial.print("HTTP Response code: ");
+      // Serial.println(httpResponseCode);
       String response = http.getString();
       Serial.println(response);
     } else {
@@ -289,5 +316,6 @@ void loop() // run over and over again
     BMEData BME = getBMEData();
     ICMData ICM = getICMData();
     // postData(ValidGPSData.TimeStamp, BME.temperature, BME.humidity, BME.pressure, ValidGPSData.latitude, ValidGPSData.longitude, ValidGPSData.altitude, ICM.AccelX, ICM.AccelY, ICM.AccelZ, ICM.GyroX, ICM.GyroY, ICM.GyroZ);
+  TestPostData(); 
   }
 }
