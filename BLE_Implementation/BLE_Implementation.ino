@@ -2,6 +2,8 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <Adafruit_GPS.h>
+#include <ArduinoJson.h>
 
 
 // ---------------------------------------------------------------//
@@ -47,8 +49,71 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
+
+// ---------------------------------------------------------------//
+// ------------------ GPS information ----------------------------//
+// ---------------------------------------------------------------//
+#define GPSSerial Serial1
+Adafruit_GPS GPS(&GPSSerial);
+#define GPSECHO false
+uint32_t GpsTimer = millis();
+uint32_t GlobalTimer = millis();
+const int sampleRateGps = 5000; // update line in initiation if this changes
+
+
+struct GPSData{
+  char TimeStamp[20];
+  float latitude;
+  float longitude;
+  float altitude;
+};
+
+
+
+GPSData readAndStoreGPS(){
+   char c = GPS.read(); // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT   // Serial.print(c); // SHOWS ALL THE NMEA STRINGS! PRINT AT UR OWN RISK :) 
+    if (GPSECHO){
+      if (c){ 
+        Serial.print(c); // if a sentence is received, we can check the checksum, parse it...
+      }
+   }
+
+   if (GPS.newNMEAreceived()) { // a tricky thing here is if we print the NMEA sentence, or data // we end up not listening and catching other sentences! // so be very wary if using OUTPUT_ALLDATA and trying to print out data     // Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    // Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+   }
+
+  if ((millis() - GpsTimer > sampleRateGps) && (!GPS.parse(GPS.lastNMEA())) && (GPS.fix != 0)) {
+        GpsTimer = millis(); // reset the timer
+        GPSData TempGPS;   
+        // Serial.print("Fix: "); Serial.print((int)GPS.fix);
+        // Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+        sprintf(TempGPS.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d", GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
+        TempGPS.latitude = GPS.latitude;
+        TempGPS.longitude = GPS.longitude;
+        TempGPS.altitude = GPS.altitude;
+        // ~~~~~~~~~~~~~~~~~~~ Run these lines to debug ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~// 
+        // Serial.print(TempGPS.latitude); Serial.println(TempGPS.longitude);
+        // Serial.print(GPS.day); Serial.println("-> day! ");
+        // Serial.print(GPS.hour);Serial.println("-> hour! ");
+        // Serial.print(GPS.year);Serial.println("-> year! ");
+        // Serial.println(TempGPS.TimeStamp);
+      return TempGPS;
+  } else { // settting up a Dummy vector    // Serial.print((!GPS.parse(GPS.lastNMEA())));
+  GPSData TempGPS;   
+  sprintf(TempGPS.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d",90, 90, 90, 90, 90, 1999);
+  TempGPS.latitude = -1; TempGPS.longitude = -1; TempGPS.altitude = -1;
+  return TempGPS;
+  }
+}
+
+
 void setup() {
   Serial.begin(115200);
+
+  GPSSerial.begin(9600); // #fixme (should I be worried about this?)
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ); // 1 Hz update rate
+
 
   BLEDevice::init(deviceName);
 
@@ -100,19 +165,47 @@ void setup() {
 
 void loop() {
     // notify changed value
-    if (deviceConnected) {
-      // pCharacteristic_1 is an integer that is increased with every second
-      // in the code below we send the value over to the client and increase the integer counter
-      pCharacteristic_1->setValue(value);
-      pCharacteristic_1->notify();
-      value++;
-      Serial.println(value);
-      value_2--;
+    GPSData DummyGPSData = readAndStoreGPS(); // Hello GPS are you still there 
+    if (DummyGPSData.latitude != -1){
+      GPSData GPS2Transmit = DummyGPSData;
+      Serial.println(GPS2Transmit.TimeStamp);
+    }
+
+
+    // if (deviceConnected) {
+    //   // pCharacteristic_1 is an integer that is increased with every second
+    //   // in the code below we send the value over to the client and increase the integer counter
+    //   pCharacteristic_1->setValue(value);
+    //   pCharacteristic_1->notify();
+    //   value++;
+    //   Serial.println(value);
+    //   value_2--;
       
-      // // Here the value is written to the Client using setValue();
-      // String txValue = "String with random value from Server: " + String(random(1000));
-      pCharacteristic_2->setValue(value_2);
-      pCharacteristic_2->notify();
+    //   // // Here the value is written to the Client using setValue();
+    //   // String txValue = "String with random value from Server: " + String(random(1000));
+    //   pCharacteristic_2->setValue(value_2);
+    //   pCharacteristic_2->notify();
+
+    // }
+    // // The code below keeps the connection status uptodate:
+    // // Disconnecting
+    // if (!deviceConnected && oldDeviceConnected) {
+    //   //  delay(500); // #Fix me and remove delay
+    //     pServer->startAdvertising(); // restart advertising
+    //     Serial.println("start advertising");
+    //     oldDeviceConnected = deviceConnected;
+    // }
+    // // Connecting
+    // if (deviceConnected && !oldDeviceConnected) {
+    //     // do stuff here on connecting
+    //     oldDeviceConnected = deviceConnected;
+    // }
+}
+
+
+// GRAVEYARD 
+
+
 
       // Serial.println("Characteristic 2 (setValue): " + txValue);
 
@@ -123,20 +216,5 @@ void loop() {
       // Serial.print("Characteristic 2 (getValue): ");
       // Serial.println(rxValue.c_str());
 
-      // #Fix me remove delay, GPS code wont work like this
-      delay(1000);
-    }
-    // The code below keeps the connection status uptodate:
-    // Disconnecting
-    if (!deviceConnected && oldDeviceConnected) {
-        delay(500); // #Fix me and remove delay
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
-    }
-    // Connecting
-    if (deviceConnected && !oldDeviceConnected) {
-        // do stuff here on connecting
-        oldDeviceConnected = deviceConnected;
-    }
-}
+      // FIXME:  remove delay, GPS code wont work like this
+     // delay(1000);
