@@ -29,10 +29,17 @@ BLE2902 *pBLE2902_2;                              // Pointer to BLE2902 of Chara
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
 // UUIDs used in this example:
-#define SERVICE_UUID          "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID_1 "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-#define CHARACTERISTIC_UUID_2 "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e"
+static BLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+// #define CHARACTERISTIC_UUID_1 "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+// #define CHARACTERISTIC_UUID_2 "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e"
+
+const char* characteristicUUIDs[] = {
+  "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
+};
+
 // Some variables to keep track on device connected
+const int numCharacteristics = sizeof(characteristicUUIDs)/ sizeof(characteristicUUIDs[0]);
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 float value = 0.0f;
@@ -60,15 +67,12 @@ uint32_t GpsTimer = millis();
 uint32_t GlobalTimer = millis();
 const int sampleRateGps = 5000; // update line in initiation if this changes
 
-
 struct GPSData{
   char TimeStamp[20];
   float latitude;
   float longitude;
   float altitude;
 };
-
-
 
 GPSData readAndStoreGPS(){
    char c = GPS.read(); // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT   // Serial.print(c); // SHOWS ALL THE NMEA STRINGS! PRINT AT UR OWN RISK :) 
@@ -108,6 +112,7 @@ GPSData readAndStoreGPS(){
 
 
 void setup() {
+
   Serial.begin(115200);
 
   GPSSerial.begin(9600); // #fixme (should I be worried about this?)
@@ -122,16 +127,16 @@ void setup() {
   pServer->setCallbacks(new MyServerCallbacks());
 
   // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
+  BLEService *pService = pServer->createService(BLESERVICE_UUID, 30, 0);
 
   // Create a BLE Characteristic
   pCharacteristic_1 = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID_1,
+                      characteristicUUIDs[0],
                       BLECharacteristic::PROPERTY_NOTIFY
                     );                   
 
   pCharacteristic_2 = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID_2,
+                      characteristicUUIDs[1],
                       BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_WRITE  |                      
                       BLECharacteristic::PROPERTY_NOTIFY
@@ -156,7 +161,7 @@ void setup() {
 
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->addServiceUUID(BLESERVICE_UUID);
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
@@ -170,36 +175,37 @@ void loop() {
       GPSData GPS2Transmit = DummyGPSData;
       Serial.println(GPS2Transmit.TimeStamp);
     }
+    
+    if ((deviceConnected )&& (millis()- GlobalTimer > sampleRateGps)) {
+      GlobalTimer = millis(); 
 
-
-    // if (deviceConnected) {
-    //   // pCharacteristic_1 is an integer that is increased with every second
-    //   // in the code below we send the value over to the client and increase the integer counter
-    //   pCharacteristic_1->setValue(value);
-    //   pCharacteristic_1->notify();
-    //   value++;
-    //   Serial.println(value);
-    //   value_2--;
+      // pCharacteristic_1 is an integer that is increased with every second
+      // in the code below we send the value over to the client and increase the integer counter
+      pCharacteristic_1->setValue(DummyGPSData.latitude);
+      pCharacteristic_1->notify();
+      value++;
+      Serial.println(value);
+      value_2--;
       
-    //   // // Here the value is written to the Client using setValue();
-    //   // String txValue = "String with random value from Server: " + String(random(1000));
-    //   pCharacteristic_2->setValue(value_2);
-    //   pCharacteristic_2->notify();
+      // // Here the value is written to the Client using setValue();
+      // String txValue = "String with random value from Server: " + String(random(1000));
+      pCharacteristic_2->setValue(value_2);
+      pCharacteristic_2->notify();
 
-    // }
-    // // The code below keeps the connection status uptodate:
-    // // Disconnecting
-    // if (!deviceConnected && oldDeviceConnected) {
-    //   //  delay(500); // #Fix me and remove delay
-    //     pServer->startAdvertising(); // restart advertising
-    //     Serial.println("start advertising");
-    //     oldDeviceConnected = deviceConnected;
-    // }
-    // // Connecting
-    // if (deviceConnected && !oldDeviceConnected) {
-    //     // do stuff here on connecting
-    //     oldDeviceConnected = deviceConnected;
-    // }
+    }
+    // The code below keeps the connection status uptodate:
+    // Disconnecting
+    if (!deviceConnected && oldDeviceConnected) {
+      //  delay(500); // #Fix me and remove delay
+        pServer->startAdvertising(); // restart advertising
+        Serial.println("start advertising");
+        oldDeviceConnected = deviceConnected;
+    }
+    // Connecting
+    if (deviceConnected && !oldDeviceConnected) {
+        // do stuff here on connecting
+        oldDeviceConnected = deviceConnected;
+    }
 }
 
 
