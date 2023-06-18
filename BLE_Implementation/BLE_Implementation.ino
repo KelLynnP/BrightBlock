@@ -40,20 +40,7 @@ const char* characteristicUUIDs[] = {
   "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
 };
 
-// class SensorObject {
-//   public:
 
-//   SensorObject(char* UUID, char* label, int SampleRate){
-//     this->UUID = UUID;
-//     this->label = label;
-//     this->SampleRate = SampleRate;
-//   }
-
-//   // Member Attributes
-//   char UUID;
-//   char label;
-//   int SampleRate;
-// };
 
 const char* dataLabelList[] = {
   "TimeStamp",
@@ -266,7 +253,20 @@ void loop() {
 
 // GRAVEYARD
 
+// class SensorObject {
+//   public:
 
+//   SensorObject(char* UUID, char* label, int SampleRate){
+//     this->UUID = UUID;
+//     this->label = label;
+//     this->SampleRate = SampleRate;
+//   }
+
+//   // Member Attributes
+//   char UUID;
+//   char label;
+//   int SampleRate;
+// };
 
 // Serial.println("Characteristic 2 (setValue): " + txValue);
 
