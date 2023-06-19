@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <string>
 #include <SoftwareSerial.h>
+#include <vector>
+#include <string>
 
 
 // ---------------------------------------------------------------//
@@ -36,6 +38,13 @@ struct GPSData {
   bool dataReceived = false; // set true if set correctly
 };
 
+float convertDegreeMin2Dec(float DegreeMin) {
+  int degree = (int)DegreeMin;
+  float minutes = DegreeMin - degree;
+  float decimalMinutes = degree + minutes;
+  return decimalMinutes;
+}
+
 GPSData readAndStoreGPS() {
   GPSData TempGPS;
   char c = GPS.read();  // BECAUSE OF GPS LOGIC THIS NEEDS TO BE CALLED AT LEAST TWICE A SECOND... This means global delay functions are OUT   // Serial.print(c); // SHOWS ALL THE NMEA STRINGS! PRINT AT UR OWN RISK :)
@@ -55,17 +64,14 @@ GPSData readAndStoreGPS() {
 
   if ((millis() - GpsTimer > sampleRateGps) && (!GPS.parse(GPS.lastNMEA())) && (GPS.fix != 0)) {
     GpsTimer = millis();  // reset the timer
-    
-    // Serial.print("Fix: "); Serial.print((int)GPS.fix);
-    // Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
     sprintf(TempGPS.FullTimeStamp, "%02d:%02d:%02d %02d/%02d/%04d", GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
     sprintf(TempGPS.ShortTimeStamp, "%02d%02d%02d", GPS.hour, GPS.minute, GPS.seconds);
-    TempGPS.latitude = GPS.latitude;
-    TempGPS.longitude = GPS.longitude;
+    TempGPS.latitude =  convertDegreeMin2Dec(GPS.latitude);
+    TempGPS.longitude = convertDegreeMin2Dec(GPS.longitude);
     TempGPS.altitude = GPS.altitude;
     TempGPS.dataReceived = true;
     // ~~~~~~~~~~~~~~~~~~~ Run these lines to debug ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-    // Serial.print(TempGPS.latitude); Serial.println(TempGPS.longitude);
+    Serial.print(TempGPS.latitude); Serial.println(TempGPS.longitude);
     // Serial.print(GPS.seconds);
     // Serial.println("-> seconds! ");
     // Serial.print(GPS.hour);Serial.println("-> hour! ");
@@ -83,6 +89,7 @@ GPSData readAndStoreGPS() {
     return TempGPS;
   }
 }
+
 
 // ---------------------------------------------------------------//
 // ------------------ BLE information ----------------------------//
@@ -157,6 +164,34 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
   return pCharacteristic;
 }
 
+// ---------------------------------------------------------------//
+// ------------- Sensor Helper Functions -------------------------//
+// ---------------------------------------------------------------//
+
+std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
+  std::vector<std::string> sensorDataVector(9);
+  sensorDataVector[0] = GPSData2Transmit.FullTimeStamp;
+  sensorDataVector[1] = FormatAndAppendTimestamp(GPSData2Transmit.latitude, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[2] = FormatAndAppendTimestamp(GPSData2Transmit.longitude, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[3] =  FormatAndAppendTimestamp(GPSData2Transmit.altitude, GPSData2Transmit.ShortTimeStamp);
+  // sensorDataVector[4] = "PM25";
+  // sensorDataVector[5] = "RelativeHumidity";
+  // sensorDataVector[6] = "Temperature";
+  // sensorDataVector[7] = "AccelerationX";
+  // sensorDataVector[8] = "AccelerationY";
+  // sensorDataVector[9] = "AccelerationZ";
+
+  return sensorDataVector;
+}
+
+std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
+  char Data[15];
+  sprintf(Data, ",%f", RawData);
+  std::string str = std::string(TimeSnip) + Data;
+  Serial.print(str.c_str());
+  return str;
+}
+
 void setup() {
 
   Serial.begin(115200);
@@ -192,26 +227,31 @@ void setup() {
 }
 
 GPSData GPS2Transmit;
+
 void loop() {
 
-  GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you still there
+  GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you there
   
   if (DummyGPSData.dataReceived == true) {  // Essential GPS Logic!
     GPSData GPS2Transmit = DummyGPSData;
     Serial.println(GPS2Transmit.ShortTimeStamp);
+    // Serial.println(GPS2Transmit.latitude);
+    // Serial.println(GPS2Transmit.longitude);
+    // Serial.println(GPS2Transmit.altitude);
   }
 
- if  ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
+ if ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
     GlobalTimer = millis();
-    // First Sample All data we want to pull (Minus GPS !!)
-    // Do this in a function????? :)
-  
-    // Encode all data into transmission format
+    
+    std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
+    // char** EncodedData[9] = PullAndTranscribeData(GPS2Transmit);
 
-    // Transmit All data we want to send!
-    std::string DummyTimestamp = "04:32:27 13/06/0023";
-    pCharacteristicChars[0]->setValue(DummyTimestamp);
-    pCharacteristicChars[0]->notify();
+    for( int i = 0 ; i < 1 ; i ++){ //NumCharacteristics
+    Serial.println(EncodedData[i].c_str());
+    // pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
+    // pCharacteristicChars[i]->notify();
+    }
+
   }
 
 
