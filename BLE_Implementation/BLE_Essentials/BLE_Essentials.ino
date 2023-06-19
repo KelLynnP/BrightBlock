@@ -10,9 +10,10 @@ bool deviceConnected = false;
 bool oldDeviceConnected = false;
 BLEServer* pServer = NULL;                    // Pointer to the server
 int value = 0;
+BLE2902* pBLE2902_1;                          // Pointer to BLE2902 of Characteristic 1
+BLE2902* pBLE2902_2;                          // Pointer to BLE2902 of Characteristic 2
 
 // Characteristic specfiic to this
-
 
 BLEDescriptor* pDescr;                      // Pointer to Descriptor of Characteristic 1
 
@@ -21,7 +22,6 @@ BLE2902* pBLE2902;                          // Pointer to BLE2902 of Characteris
 // BLECharacteristic* pCharacteristic = NULL;  // Pointer to Characteristic
 
 BLECharacteristic* pCharacteristicChars[8] = {NULL};
-
 
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
@@ -40,10 +40,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
   };
 };
 
-BLECharacteristic* initializeSingleCharacteristicsMethod(BLECharacteristic* pCharacteristic, BLEService* pService, const char*  characteristicUUID){
-  
-  // Serial.print("hello hello hello");
-  // Serial.print(characteristicUUID);
+BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic, BLEService* pService, const char*  characteristicUUID){
   // 2.a. Characteristics Here 
   pCharacteristic = pService->createCharacteristic(
   characteristicUUID,
@@ -62,6 +59,7 @@ BLECharacteristic* initializeSingleCharacteristicsMethod(BLECharacteristic* pCha
   return pCharacteristic;
 }
 
+
 // Let it run!!!!
 void setup() {
   // put your setup code here, to run once:
@@ -71,11 +69,12 @@ void setup() {
   BLEDevice::init("Bleep");     // You need a device 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
+  BLEService* pService = pServer->createService(BLESERVICE_UUID, 30, 0);
+  // 2. Set Characteristics 
+  for (int i = 0; i < 4; i ++){
+  pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i]);
+  }
 
-  BLEService* pService = pServer->createService(BLESERVICE_UUID, numServices, 0);
-  for (int i = 0; i < 4; i ++  ){
-  pCharacteristicChars[i] = initializeSingleCharacteristicsMethod(pCharacteristicChars[i], pService, characteristicUUIDs[i]);
-    }
   // 3. Start the service
   pService->start();
 
@@ -94,6 +93,13 @@ void loop() {
   pCharacteristicChars[0]->setValue(DummyTimestamp);
   pCharacteristicChars[0]->notify();
 
+  pCharacteristicChars[1]->setValue(DummyTimestamp);
+  pCharacteristicChars[1]->notify();
+
+  pCharacteristicChars[2]->setValue(DummyTimestamp);
+  pCharacteristicChars[2]->notify();
+
+  delay(500);
 
   if (!deviceConnected && oldDeviceConnected) {
     delay(500); // #Fix me and remove delay
@@ -103,16 +109,7 @@ void loop() {
   }
   // Connecting
   if (deviceConnected && !oldDeviceConnected) {     // do stuff here on connecting
+    Serial.print("Device Connected");
     oldDeviceConnected = deviceConnected;
   }
 }
-
-//   pCharacteristicicChar1,
-//   pCharacteristicicChar2,
-//   pCharacteristicicChar3,
-//   pCharacteristicicChar4,
-//   pCharacteristicicChar5,
-//   pCharacteristicicChar6,
-//   pCharacteristicicChar7,
-//   pCharacteristicicChar8
-// };
