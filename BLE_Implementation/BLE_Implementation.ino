@@ -184,7 +184,7 @@ ICMData getICMData(){
 }
 
 std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
-  std::vector<std::string> sensorDataVector(9);
+  std::vector<std::string> sensorDataVector(10);
   ICMData ICM = getICMData(); 
 
   // GPS Data All pulled seperatly 
@@ -200,9 +200,9 @@ std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) 
   sensorDataVector[6] = FormatAndAppendTimestamp(bme.readTemperature(), GPSData2Transmit.ShortTimeStamp);
 
   // Accerleration Data
-  // sensorDataVector[7] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
-  // sensorDataVector[8] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
-  // sensorDataVector[9] = FormatAndAppendTimestamp(ICM.AccelZ, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[7] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[8] = FormatAndAppendTimestamp(ICM.AccelY, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[9] = FormatAndAppendTimestamp(ICM.AccelZ, GPSData2Transmit.ShortTimeStamp);
 
   return sensorDataVector;
 }
@@ -383,7 +383,8 @@ void loop() {
 
     std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
 
-    for( int i = 0 ; i < 1 ; i ++){ //NumCharacteristics
+    for( int i = 0 ; i < 9 ; i ++){ //
+    Serial.println(i);
     Serial.println(EncodedData[i].c_str());
     pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
     pCharacteristicChars[i]->notify();
