@@ -97,7 +97,6 @@ BLEServer* pServer = NULL;                    // Pointer to the server
 int value = 0;
 unsigned long deviceRebootMillis = 0;
 
-
 // Characteristic Specific
 BLEDescriptor* pDescr;                      // Pointer to Descriptor of Characteristic 1
 BLE2902* pBLE2902;                          // Pointer to BLE2902 of Characteristic 1
@@ -194,29 +193,37 @@ void setup() {
 
 GPSData GPS2Transmit;
 void loop() {
-  // notify changed value
+
   GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you still there
   
-  if (DummyGPSData.dataReceived == true) {
+  if (DummyGPSData.dataReceived == true) {  // Essential GPS Logic!
     GPSData GPS2Transmit = DummyGPSData;
     Serial.println(GPS2Transmit.ShortTimeStamp);
   }
 
  if  ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
     GlobalTimer = millis();
+    // First Sample All data we want to pull (Minus GPS !!)
+    // Do this in a function????? :)
+  
+    // Encode all data into transmission format
+
+    // Transmit All data we want to send!
     std::string DummyTimestamp = "04:32:27 13/06/0023";
     pCharacteristicChars[0]->setValue(DummyTimestamp);
     pCharacteristicChars[0]->notify();
   }
-  
-  // Disconnecting
+
+
+  // --------- BLE LOGIC FOR CONNECTION AND DISCONNECTION --------// 
+  // Disconnection 
   if (!deviceConnected && oldDeviceConnected && (millis() - deviceRebootMillis > 500) ) {
     deviceRebootMillis = millis();
     pServer->startAdvertising();  // restart advertising
     Serial.println("start advertising");
     oldDeviceConnected = deviceConnected;
   }
-  // Connecting
+  // Connection 
   if (deviceConnected && !oldDeviceConnected) {
     oldDeviceConnected = deviceConnected;
   }
