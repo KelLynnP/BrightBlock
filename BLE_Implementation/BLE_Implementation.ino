@@ -92,7 +92,7 @@ unsigned long deviceRebootMillis = 0;
 // Characteristic Specific
 BLEDescriptor* pDescr;                      // Pointer to Descriptor of Characteristic 1
 BLE2902* pBLE2902;                          // Pointer to BLE2902 of Characteristic 1
-BLECharacteristic* pCharacteristicChars[9] = {NULL};
+BLECharacteristic* pCharacteristicChars[10] = {NULL};
 
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
@@ -341,18 +341,18 @@ void setup() {
   Serial.println();
   }
 
-
   //----------- BLE Set up-------------- //
   // 1. Service information to run once   
   BLEDevice::init(deviceName);     // You need a device 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-  BLEService* pService = pServer->createService(BLESERVICE_UUID, 30, 0);
+  BLEService* pService = pServer->createService(BLESERVICE_UUID, 11, 0);
   
   // 2. Set Characteristics 
   const int NumCharacteristics = sizeof(characteristicUUIDs) / sizeof(characteristicUUIDs[0]);
-  for (int i = 0; i < NumCharacteristics; i ++){
-  pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
+  for (int i = 0; i < 10; i ++){
+    Serial.println(characteristicUUIDs[i]);
+    pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
   }
 
   // 3. Start the service
@@ -383,13 +383,13 @@ void loop() {
 
     std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
 
-    for( int i = 0 ; i < 9 ; i ++){ //
+    for( int i = 0 ; i < 11 ; i ++){ //
     Serial.println(i);
-    Serial.println(EncodedData[i].c_str());
-    pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
-    pCharacteristicChars[i]->notify();
+      Serial.println(EncodedData[i].c_str());
+      pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
+      pCharacteristicChars[i]->notify();
     }
-
+    
   }
 
 
