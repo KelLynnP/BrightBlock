@@ -20,6 +20,8 @@
 const char* deviceName = "BLEEP";
 unsigned long previousMillis = 0;
 const unsigned long sampleRate = 1000;
+const int NumCharacteristics = 10;
+
 
 // ---------------------------------------------------------------//
 // ------------------ GPS information ----------------------------//
@@ -92,7 +94,7 @@ unsigned long deviceRebootMillis = 0;
 // Characteristic Specific
 BLEDescriptor* pDescr;                      // Pointer to Descriptor of Characteristic 1
 BLE2902* pBLE2902;                          // Pointer to BLE2902 of Characteristic 1
-BLECharacteristic* pCharacteristicChars[10] = {NULL};
+BLECharacteristic* pCharacteristicChars[NumCharacteristics] = {NULL};
 
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
@@ -184,7 +186,7 @@ ICMData getICMData(){
 }
 
 std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
-  std::vector<std::string> sensorDataVector(10);
+  std::vector<std::string> sensorDataVector(NumCharacteristics);
   ICMData ICM = getICMData(); 
 
   // GPS Data All pulled seperatly 
@@ -346,11 +348,11 @@ void setup() {
   BLEDevice::init(deviceName);     // You need a device 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-  BLEService* pService = pServer->createService(BLESERVICE_UUID, 11, 0);
+  BLEService* pService = pServer->createService(BLESERVICE_UUID, NumCharacteristics, 0);
   
   // 2. Set Characteristics 
-  const int NumCharacteristics = sizeof(characteristicUUIDs) / sizeof(characteristicUUIDs[0]);
-  for (int i = 0; i < 10; i ++){
+  Serial.println(NumCharacteristics);
+  for (int i = 0; i < NumCharacteristics; i ++){
     Serial.println(characteristicUUIDs[i]);
     pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
   }
@@ -380,11 +382,10 @@ void loop() {
 //  if ( (millis() - GlobalTimer > sampleRateGps)) { // (millis() - GlobalTimer > sampleRateGps
   if ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
     GlobalTimer = millis();
-
     std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
 
-    for( int i = 0 ; i < 11 ; i ++){ //
-    Serial.println(i);
+    for( int i = 0 ; i < NumCharacteristics ; i ++){ //
+      Serial.print(i); 
       Serial.println(EncodedData[i].c_str());
       pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
       pCharacteristicChars[i]->notify();
