@@ -24,7 +24,7 @@ Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 Adafruit_BME680 bme; // Initialize the BME688 sensor object
 Adafruit_ICM20948 icm; // Initialize the ICM209448 sensor object
-RTC_DS1307 rtc; // Initialize a real time clock
+// RTC_DS1307 rtc; // Initialize a real time clock
 uint32_t GpsTimer = millis();
 uint32_t GlobalTimer = millis();
 const int buttonPin = 25;  // the number of the pushbutton pin
@@ -168,7 +168,7 @@ GPSData GPS_ConstantReadNStore(){
   if (GPSECHO)
     if (c) Serial.print(c); // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) { // a tricky thing here is if we print the NMEA sentence, or data // we end up not listening and catching other sentences! // so be very wary if using OUTPUT_ALLDATA and trying to print out data
-    // Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
       return TempGPS; // we can fail to parse a sentence in which case we should just wait for another
   }
@@ -195,12 +195,14 @@ void setup() {
   Serial.begin(115200);
   pinMode(buttonPin, INPUT);
   // Wifi Set up
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
-  Serial.println("Connected to WiFi");
+  // WiFi.begin(ssid, password);
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(1000);
+  //   Serial.println("Connecting to WiFi...");
+  // }
+  // Serial.println("Connected to WiFi");
+
+  Serial.println("Skipping Wifi connection!");
   // GPS Store
   GPSSerial.begin(9600); //9600 Default buad rate for Ultimate GPS
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -223,6 +225,7 @@ void setup() {
     Serial.println("Failed to find ICM20948 chip");
     while (1) {
       delay(10);
+      break;
     }
   }
   else{
@@ -313,6 +316,8 @@ void setup() {
 
 void loop() // run over and over again
 {
+  // Serial.println("looping");
+
   GPSData ValidGPSData;
   GPSData MaybeNullGPSData = GPS_ConstantReadNStore(); //yelling into void! Hello GPS are you still there 
   buttonState = digitalRead(buttonPin);
@@ -323,8 +328,8 @@ void loop() // run over and over again
     ValidGPSData = MaybeNullGPSData; 
     Serial.println(ValidGPSData.TimeStamp);
       // Retrieve the current time
-    DateTime now = rtc.now();
-    sprintf(ValidGPSData.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d",now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
+    // DateTime now = rtc.now();
+    // sprintf(ValidGPSData.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d",now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
     Serial.println(ValidGPSData.TimeStamp);
   }
  // Pull sample rlate
@@ -332,8 +337,8 @@ void loop() // run over and over again
     GlobalTimer = millis(); // reset the timer
     BMEData BME = getBMEData();
     ICMData ICM = getICMData();
-    DateTime now = rtc.now();
-    sprintf(ValidGPSData.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d",now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
+    // DateTime now = rtc.now();
+    // sprintf(ValidGPSData.TimeStamp, "%02d:%02d:%02d %02d/%02d/%04d",now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());
     Serial.println(ValidGPSData.TimeStamp);
     // postData(ValidGPSData.TimeStamp, BME.temperature, BME.humidity, BME.pressure, ValidGPSData.latitude, ValidGPSData.longitude, ValidGPSData.altitude, ICM.AccelX, ICM.AccelY, ICM.AccelZ, ICM.GyroX, ICM.GyroY, ICM.GyroZ);
   // TestPostData(); 

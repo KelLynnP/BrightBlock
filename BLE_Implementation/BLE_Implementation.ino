@@ -239,7 +239,10 @@ void setup() {
   delay(1000);
   if (! aqi.begin_I2C()) {      // connect to the sensor over I2C
     Serial.println("Could not find PM 2.5 sensor!");
-    while (1) delay(10);
+    while (1){ 
+      delay(10);
+      break;
+    }
   }
   Serial.println("PM25 found!");
 
@@ -348,8 +351,10 @@ void setup() {
   BLEDevice::init(deviceName);     // You need a device 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-  BLEService* pService = pServer->createService(BLESERVICE_UUID, NumCharacteristics, 0);
-  
+  // BLEService* pService = pServer->createService(BLESERVICE_UUID, NumCharacteristics, 0);
+
+  BLEService* pService = pServer->createService(BLESERVICE_UUID, 40, 0);
+
   // 2. Set Characteristics 
   Serial.println(NumCharacteristics);
   for (int i = 0; i < NumCharacteristics; i ++){
