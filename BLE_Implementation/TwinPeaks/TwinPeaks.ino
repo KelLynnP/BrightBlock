@@ -6,6 +6,9 @@
 #include "Adafruit_PM25AQI.h"
 #include <Adafruit_BME680.h>
 #include <Adafruit_ICM20948.h>
+#include <Arduino.h> // Sensirion I2C libraries (lol @ not using arduino?) 
+#include <SensirionI2CSen5x.h>
+#include <Wire.h>
 
 #include <ArduinoJson.h>
 #include <unordered_map>
@@ -21,6 +24,38 @@ const char* deviceName = "BLEEP";
 unsigned long previousMillis = 0;
 const unsigned long sampleRate = 1000;
 const int NumCharacteristics = 10;
+const boolean isMemoryCardAttached = true;
+
+// -------------------- Which Sensors! ------------------------------//
+
+// #FIXME: Ideally this is a a config file which is updated at the start of each run!
+
+const char* UUIDLabels[] = {
+  "TimeStamp",
+  "Latitude",
+  "Longitude",
+  "Altitude",
+  "PM25",
+  "RelativeHumidity",
+  "Temperature",
+  "AccelerationX",
+  "AccelerationY",
+  "AccelerationZ"
+};
+
+const char* characteristicUUIDs[] = {
+  "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
+  "d7d85823-5304-4eb3-9671-3e571fac07b9",
+  "d2789cef-106f-4660-9e3f-584c12e2e3c7",
+  "bf5a799d-26d0-410e-96b0-9ada1eb9f758",
+  "c22b405e-2b7b-4632-831d-54523e169a01",
+  "ffdda8ad-60a2-4184-baff-5c79a2eccb8c",
+  "183b971a-79f5-4004-8182-31c88d910dca",
+  "90b77f62-003d-454e-97fc-8f597b42048c",
+  "86cef02b-8c15-457b-b480-52e6cc0bdd8c"
+};
+
 
 
 // ---------------------------------------------------------------//
@@ -96,31 +131,6 @@ BLEDescriptor* pDescr;  // Pointer to Descriptor of Characteristic 1
 BLE2902* pBLE2902;      // Pointer to BLE2902 of Characteristic 1
 BLECharacteristic* pCharacteristicChars[NumCharacteristics] = { NULL };
 
-const char* characteristicUUIDs[] = {
-  "beb5483e-36e1-4688-b7f5-ea07361b26a8",
-  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
-  "d7d85823-5304-4eb3-9671-3e571fac07b9",
-  "d2789cef-106f-4660-9e3f-584c12e2e3c7",
-  "bf5a799d-26d0-410e-96b0-9ada1eb9f758",
-  "c22b405e-2b7b-4632-831d-54523e169a01",
-  "ffdda8ad-60a2-4184-baff-5c79a2eccb8c",
-  "183b971a-79f5-4004-8182-31c88d910dca",
-  "90b77f62-003d-454e-97fc-8f597b42048c",
-  "86cef02b-8c15-457b-b480-52e6cc0bdd8c"
-};
-
-const char* UUIDLabels[] = {
-  "TimeStamp",
-  "Latitude",
-  "Longitude",
-  "Altitude",
-  "PM25",
-  "RelativeHumidity",
-  "Temperature",
-  "AccelerationX",
-  "AccelerationY",
-  "AccelerationZ"
-};
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
@@ -155,9 +165,97 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
 // -------- Sensor Declarations + Helper Functions ---------------//
 // ---------------------------------------------------------------//
 
-Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
-PM25_AQI_Data PM25Data;
-Adafruit_BME680 bme;    // Initialize the BME688 sensor object
+// Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
+// PM25_AQI_Data PM25Data;
+
+// Sensirion Data Rhings
+// The used commands use up to 48 bytes. On some Arduino's the default buffer
+// space is not large enough
+#define MAXBUF_REQUIREMENT 48
+
+#if (defined(I2C_BUFFER_LENGTH) &&                 \
+     (I2C_BUFFER_LENGTH >= MAXBUF_REQUIREMENT)) || \
+    (defined(BUFFER_LENGTH) && BUFFER_LENGTH >= MAXBUF_REQUIREMENT)
+#define USE_PRODUCT_INFO
+#endif
+
+SensirionI2CSen5x sen5x;
+
+void printModuleVersions() {
+    uint16_t error;
+    char errorMessage[256];
+
+    unsigned char productName[32];
+    uint8_t productNameSize = 32;
+
+    error = sen5x.getProductName(productName, productNameSize);
+
+    if (error) {
+        Serial.print("Error trying to execute getProductName(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    } else {
+        Serial.print("ProductName:");
+        Serial.println((char*)productName);
+    }
+
+    uint8_t firmwareMajor;
+    uint8_t firmwareMinor;
+    bool firmwareDebug;
+    uint8_t hardwareMajor;
+    uint8_t hardwareMinor;
+    uint8_t protocolMajor;
+    uint8_t protocolMinor;
+
+    error = sen5x.getVersion(firmwareMajor, firmwareMinor, firmwareDebug,
+                             hardwareMajor, hardwareMinor, protocolMajor,
+                             protocolMinor);
+    if (error) {
+        Serial.print("Error trying to execute getVersion(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    } else {
+        Serial.print("Firmware: ");
+        Serial.print(firmwareMajor);
+        Serial.print(".");
+        Serial.print(firmwareMinor);
+        Serial.print(", ");
+
+        Serial.print("Hardware: ");
+        Serial.print(hardwareMajor);
+        Serial.print(".");
+        Serial.println(hardwareMinor);
+    }
+}
+void printSerialNumber() {
+    uint16_t error;
+    char errorMessage[256];
+    unsigned char serialNumber[32];
+    uint8_t serialNumberSize = 32;
+
+    error = sen5x.getSerialNumber(serialNumber, serialNumberSize);
+    if (error) {
+        Serial.print("Error trying to execute getSerialNumber(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    } else {
+        Serial.print("SerialNumber:");
+        Serial.println((char*)serialNumber);
+    }
+}
+
+// // Sensirion Values
+// struct SnsrnData {     
+//   float massConcentrationPm1p0;
+//   float massConcentrationPm2p5;
+//   float massConcentrationPm4p0;
+//   float massConcentrationPm10p0;
+//   float ambientHumidity;
+//   float ambientTemperature;
+//   float vocIndex;
+//   float noxIndex;
+// }
+
 Adafruit_ICM20948 icm;  // Initialize the ICM209448 sensor object
 unsigned long PlantMillis = 0;
 const unsigned long PlantSample = 500;
@@ -185,30 +283,6 @@ ICMData getICMData() {
   return ICM;
 }
 
-std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
-  std::vector<std::string> sensorDataVector(NumCharacteristics);
-  ICMData ICM = getICMData();
-
-  // GPS Data All pulled seperatly
-  sensorDataVector[0] = GPSData2Transmit.FullTimeStamp;
-
-  sensorDataVector[1] = FormatAndAppendTimestamp(GPSData2Transmit.latitude, GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[2] = FormatAndAppendTimestamp(GPSData2Transmit.longitude, GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[3] = FormatAndAppendTimestamp(GPSData2Transmit.altitude, GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[4] = FormatAndAppendTimestamp(float(PM25Data.pm25_env), GPSData2Transmit.ShortTimeStamp);
-
-  //relative Humidity
-  sensorDataVector[5] = FormatAndAppendTimestamp(bme.readHumidity(), GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[6] = FormatAndAppendTimestamp(bme.readTemperature(), GPSData2Transmit.ShortTimeStamp);
-
-  // Accerleration Data
-  sensorDataVector[7] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[8] = FormatAndAppendTimestamp(ICM.AccelY, GPSData2Transmit.ShortTimeStamp);
-  sensorDataVector[9] = FormatAndAppendTimestamp(ICM.AccelZ, GPSData2Transmit.ShortTimeStamp);
-
-  return sensorDataVector;
-}
-
 std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
   char Data[15];
   // Serial.println(RawData);
@@ -217,6 +291,59 @@ std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
   Serial.println(str.c_str());
   return str;
 }
+
+std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
+  std::vector<std::string> sensorDataVector(NumCharacteristics);
+  ICMData ICM = getICMData();
+  char errorMessage[256];
+  uint16_t error;
+
+  // Read Measurement
+  float massConcentrationPm1p0;
+  float massConcentrationPm2p5;
+  float massConcentrationPm4p0;
+  float massConcentrationPm10p0;
+  float ambientHumidity;
+  float ambientTemperature;
+  float vocIndex;
+  float noxIndex;
+
+  error = sen5x.readMeasuredValues(
+      massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
+      massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
+      noxIndex);
+
+  if (error) {
+      Serial.print("Error trying to execute readMeasuredValues(): ");
+      errorToString(error, errorMessage, 256);
+      Serial.println(errorMessage);}
+
+  // GPS Data All pulled seperatly
+  sensorDataVector[0] = GPSData2Transmit.FullTimeStamp;
+
+  sensorDataVector[1] = FormatAndAppendTimestamp(GPSData2Transmit.latitude, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[2] = FormatAndAppendTimestamp(GPSData2Transmit.longitude, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[3] = FormatAndAppendTimestamp(GPSData2Transmit.altitude, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[4] = FormatAndAppendTimestamp(massConcentrationPm2p5, GPSData2Transmit.ShortTimeStamp);
+
+  //relative Humidity
+  sensorDataVector[5] = FormatAndAppendTimestamp(ambientHumidity, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[6] = FormatAndAppendTimestamp(ambientTemperature, GPSData2Transmit.ShortTimeStamp);
+
+  // Filling in with more climate data for now
+  sensorDataVector[7] = FormatAndAppendTimestamp(vocIndex, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[8] = FormatAndAppendTimestamp(noxIndex, GPSData2Transmit.ShortTimeStamp);
+  sensorDataVector[9] = FormatAndAppendTimestamp(massConcentrationPm10p0, GPSData2Transmit.ShortTimeStamp);
+
+  // // Accerleration Data
+  // sensorDataVector[7] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
+  // sensorDataVector[8] = FormatAndAppendTimestamp(ICM.AccelY, GPSData2Transmit.ShortTimeStamp);
+  // sensorDataVector[9] = FormatAndAppendTimestamp(ICM.AccelZ, GPSData2Transmit.ShortTimeStamp);
+
+  return sensorDataVector;
+}
+
+
 
 // ---------------------------------------------------------------//
 // ---------------------- Button Functions -----------------------//
@@ -235,114 +362,133 @@ void setup() {
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);  // 1 Hz update rate
 
   //---------- PM 2.5 Set Up ------------ //
-  // Wait one second for sensor to boot up!
-  delay(1000);
-  if (!aqi.begin_I2C()) {  // connect to the sensor over I2C
-    Serial.println("Could not find PM 2.5 sensor!");
-    while (1) {
-      delay(10);
-      break;
-    }
-  }
-  Serial.println("PM25 found!");
 
-  //---------- BME 688 Begin -----------//
-  if (!bme.begin()) {
-    Serial.println("Could not find BME688 sensor!");
-  } else {  // ~if~ we find Set up oversampling and filter initialization
-    bme.setTemperatureOversampling(BME680_OS_8X);
-    bme.setHumidityOversampling(BME680_OS_2X);
-    bme.setPressureOversampling(BME680_OS_4X);
-    bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-    bme.setGasHeater(320, 150);  // 320*C for 150 ms
+  Wire.begin();
+  sen5x.begin(Wire);
+
+  char errorMessage[256];
+  
+  uint16_t error;
+  error = sen5x.deviceReset();
+  if (error) {
+      Serial.print("Error trying to execute deviceReset(): ");
+      errorToString(error, errorMessage, 256);
+      Serial.println(errorMessage);
   }
 
-  //---------- ICM  Begin -----------//
-  if (!icm.begin_I2C()) {  // if (!icm.begin_SPI(ICM_CS)) { // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
+  // Print SEN55 module information if i2c buffers are large enough
+  #ifdef USE_PRODUCT_INFO
+      printSerialNumber();
+      printModuleVersions();
+  #endif
 
-    Serial.println("Failed to find ICM20948 chip");
-    while (1) {
-      delay(10);
-      break;
-    }
-  } else {
-    Serial.println("ICM20948 Found!");
-    // icm.setAccelRange(ICM20948_ACCEL_RANGE_16_G);
-    Serial.print("Accelerometer range set to: ");
-    switch (icm.getAccelRange()) {
-      case ICM20948_ACCEL_RANGE_2_G:
-        Serial.println("+-2G");
-        break;
-      case ICM20948_ACCEL_RANGE_4_G:
-        Serial.println("+-4G");
-        break;
-      case ICM20948_ACCEL_RANGE_8_G:
-        Serial.println("+-8G");
-        break;
-      case ICM20948_ACCEL_RANGE_16_G:
-        Serial.println("+-16G");
-        break;
-    }
-    // Serial.println("OK");
-    // icm.setGyroRange(ICM20948_GYRO_RANGE_2000_DPS);
-    Serial.print("Gyro range set to: ");
-    switch (icm.getGyroRange()) {
-      case ICM20948_GYRO_RANGE_250_DPS:
-        Serial.println("250 degrees/s");
-        break;
-      case ICM20948_GYRO_RANGE_500_DPS:
-        Serial.println("500 degrees/s");
-        break;
-      case ICM20948_GYRO_RANGE_1000_DPS:
-        Serial.println("1000 degrees/s");
-        break;
-      case ICM20948_GYRO_RANGE_2000_DPS:
-        Serial.println("2000 degrees/s");
-        break;
+    // Look at temp offset info in Notion
+    float tempOffset = 0.0;
+    error = sen5x.setTemperatureOffsetSimple(tempOffset);
+    if (error) {
+        Serial.print("Error trying to execute setTemperatureOffsetSimple(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    } else {
+        Serial.print("Temperature Offset set to ");
+        Serial.print(tempOffset);
+        Serial.println(" deg. Celsius (SEN54/SEN55 only");
     }
 
-    //  icm.setAccelRateDivisor(4095);
-    uint16_t accel_divisor = icm.getAccelRateDivisor();
-    float accel_rate = 1125 / (1.0 + accel_divisor);
-
-    Serial.print("Accelerometer data rate divisor set to: ");
-    Serial.println(accel_divisor);
-    Serial.print("Accelerometer data rate (Hz) is approximately: ");
-    Serial.println(accel_rate);
-
-    //  icm.setGyroRateDivisor(255);
-    uint8_t gyro_divisor = icm.getGyroRateDivisor();
-    float gyro_rate = 1100 / (1.0 + gyro_divisor);
-
-    Serial.print("Gyro data rate divisor set to: ");
-    Serial.println(gyro_divisor);
-    Serial.print("Gyro data rate (Hz) is approximately: ");
-    Serial.println(gyro_rate);
-
-    // icm.setMagDataRate(AK09916_MAG_DATARATE_10_HZ);
-    Serial.print("Magnetometer data rate set to: ");
-    switch (icm.getMagDataRate()) {
-      case AK09916_MAG_DATARATE_SHUTDOWN:
-        Serial.println("Shutdown");
-        break;
-      case AK09916_MAG_DATARATE_SINGLE:
-        Serial.println("Single/One shot");
-        break;
-      case AK09916_MAG_DATARATE_10_HZ:
-        Serial.println("10 Hz");
-        break;
-      case AK09916_MAG_DATARATE_20_HZ:
-        Serial.println("20 Hz");
-        break;
-      case AK09916_MAG_DATARATE_50_HZ:
-        Serial.println("50 Hz");
-        break;
-      case AK09916_MAG_DATARATE_100_HZ:
-        Serial.println("100 Hz");
-        break;
+    // Start Measurement
+    error = sen5x.startMeasurement();
+    if (error) {
+        Serial.print("Error trying to execute startMeasurement(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
     }
-    Serial.println();
-  }
+
+  // //---------- ICM  Begin -----------//
+  // if (!icm.begin_I2C()) {  // if (!icm.begin_SPI(ICM_CS)) { // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
+
+  //   Serial.println("Failed to find ICM20948 chip");
+  //   while (1) {
+  //     delay(10);
+  //     break;
+  //   }
+  // } else {
+  //   Serial.println("ICM20948 Found!");
+  //   // icm.setAccelRange(ICM20948_ACCEL_RANGE_16_G);
+  //   Serial.print("Accelerometer range set to: ");
+  //   switch (icm.getAccelRange()) {
+  //     case ICM20948_ACCEL_RANGE_2_G:
+  //       Serial.println("+-2G");
+  //       break;
+  //     case ICM20948_ACCEL_RANGE_4_G:
+  //       Serial.println("+-4G");
+  //       break;
+  //     case ICM20948_ACCEL_RANGE_8_G:
+  //       Serial.println("+-8G");
+  //       break;
+  //     case ICM20948_ACCEL_RANGE_16_G:
+  //       Serial.println("+-16G");
+  //       break;
+  //   }
+  //   // Serial.println("OK");
+  //   // icm.setGyroRange(ICM20948_GYRO_RANGE_2000_DPS);
+  //   Serial.print("Gyro range set to: ");
+  //   switch (icm.getGyroRange()) {
+  //     case ICM20948_GYRO_RANGE_250_DPS:
+  //       Serial.println("250 degrees/s");
+  //       break;
+  //     case ICM20948_GYRO_RANGE_500_DPS:
+  //       Serial.println("500 degrees/s");
+  //       break;
+  //     case ICM20948_GYRO_RANGE_1000_DPS:
+  //       Serial.println("1000 degrees/s");
+  //       break;
+  //     case ICM20948_GYRO_RANGE_2000_DPS:
+  //       Serial.println("2000 degrees/s");
+  //       break;
+  //   }
+
+  //   //  icm.setAccelRateDivisor(4095);
+  //   uint16_t accel_divisor = icm.getAccelRateDivisor();
+  //   float accel_rate = 1125 / (1.0 + accel_divisor);
+
+  //   Serial.print("Accelerometer data rate divisor set to: ");
+  //   Serial.println(accel_divisor);
+  //   Serial.print("Accelerometer data rate (Hz) is approximately: ");
+  //   Serial.println(accel_rate);
+
+  //   //  icm.setGyroRateDivisor(255);
+  //   uint8_t gyro_divisor = icm.getGyroRateDivisor();
+  //   float gyro_rate = 1100 / (1.0 + gyro_divisor);
+
+  //   Serial.print("Gyro data rate divisor set to: ");
+  //   Serial.println(gyro_divisor);
+  //   Serial.print("Gyro data rate (Hz) is approximately: ");
+  //   Serial.println(gyro_rate);
+
+  //   // icm.setMagDataRate(AK09916_MAG_DATARATE_10_HZ);
+  //   Serial.print("Magnetometer data rate set to: ");
+  //   switch (icm.getMagDataRate()) {
+  //     case AK09916_MAG_DATARATE_SHUTDOWN:
+  //       Serial.println("Shutdown");
+  //       break;
+  //     case AK09916_MAG_DATARATE_SINGLE:
+  //       Serial.println("Single/One shot");
+  //       break;
+  //     case AK09916_MAG_DATARATE_10_HZ:
+  //       Serial.println("10 Hz");
+  //       break;
+  //     case AK09916_MAG_DATARATE_20_HZ:
+  //       Serial.println("20 Hz");
+  //       break;
+  //     case AK09916_MAG_DATARATE_50_HZ:
+  //       Serial.println("50 Hz");
+  //       break;
+  //     case AK09916_MAG_DATARATE_100_HZ:
+  //       Serial.println("100 Hz");
+  //       break;
+  //   }
+  //   Serial.println();
+  // }
 
   //----------- BLE Set up-------------- //
   // 1. Service information to run once
@@ -371,6 +517,7 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
 }
+
 
 GPSData GPS2Transmit;
 
