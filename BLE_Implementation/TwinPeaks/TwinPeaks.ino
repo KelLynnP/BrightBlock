@@ -32,6 +32,8 @@ const int memoryCardPin = 27;
 int eventCounter = -1;
 bool isEventStarted = false;
 const char eventIndexPath []= "/eventIndex.txt";
+char NewFilePath[30]; // Increased the buffer size
+
 
 
 // -------------------- Which Sensors! ------------------------------//
@@ -352,10 +354,10 @@ int buttonState = 0;
 // ------------------ Memory Card Stuff --------------------------//
 // ---------------------------------------------------------------//
 
-// #FixME move into its own header file
-int PullLastEventIndex(fs::FS &fs, const char * Eventpath){
+int PullLastEventIndex(fs::FS &fs, const char * path){ //FiXme: this calls other helper functions nested inside, i am okay with it because it helps declutter the already cluttered code below. 
   Serial.println("Starting PullLastEventIndex ");    
-  File file = fs.open(Eventpath, FILE_READ);
+  
+  File file = fs.open(path, FILE_READ);
   String line;
   if(!file){
       Serial.println("Failed to open file for appending");
@@ -368,21 +370,13 @@ int PullLastEventIndex(fs::FS &fs, const char * Eventpath){
   }
 
   int numLine = std::stoi(line.c_str());  
-  Serial.printf("Appending to file: %s\n", Eventpath);
+  Serial.printf("Appending to file: %s\n", path);
   std::string numLinePlusOne = std::to_string(numLine + 1);
   numLinePlusOne += ',';
-
-  if(!file){
-      Serial.println("Failed to open file for appending");
-      return -1;
-  }
-
-  if(file.print(numLinePlusOne.c_str())){
-      Serial.println("Message appended");
-  } else {
-      Serial.println("Append failed");
-  }
+  Serial.println(numLinePlusOne.c_str());
   file.close();
+  appendFile(fs, path, numLinePlusOne.c_str());
+
   return numLine;
 }
 
@@ -402,9 +396,20 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
     file.close();
 }
 
-void saveLineData(std::string Row_Data, int eventCounter){
+void appendFile(fs::FS &fs, const char * path, const char * message){
+    Serial.printf("Appending to file: %s\n", path);
 
-return;
+    File file = fs.open(path, FILE_APPEND);
+    if(!file){
+        Serial.println("Failed to open file for appending");
+        return;
+    }
+    if(file.print(message)){
+        Serial.println("Message appended");
+    } else {
+        Serial.println("Append failed");
+    }
+    file.close();
 }
 
 
@@ -631,9 +636,8 @@ void loop() {
 
     Row_Data += '\n';
     if (isMemoryCardAttached){
-      
-      // saveLineData(Row_Data, eventCounter);
-    }
+      appendFile(SD, NewFilePath, Row_Data.c_str()); // Corrected the function name to appendFile and added missing ".c_str()"
+          }
 
   }
 
@@ -655,8 +659,11 @@ void loop() {
     // pull last Event Started
     if (isEventStarted == false){ 
       eventCounter = PullLastEventIndex(SD, eventIndexPath);
-      // newPath = sprintf("\Event")
-      // writeFile(SD, eventIndexPath)
+      sprintf(NewFilePath, "/Event%d.txt", eventCounter); // Fixed format string
+      Serial.print("New data file created");
+      Serial.println(NewFilePath);
+      String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, AccelerationX, AccelerationY, AccelerationZ";
+      writeFile(SD, NewFilePath, Header.c_str()); // Added missing ".c_str()" and semicolon
       isEventStarted = true;
     }
 
