@@ -50,20 +50,22 @@ const char* UUIDLabels[] = {
   "Temperature",
   "AccelerationX",
   "AccelerationY",
-  "AccelerationZ"
+  "AccelerationZ",
+  // "Button Press"
 };
 
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
-  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
-  "d7d85823-5304-4eb3-9671-3e571fac07b9",
+  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e", //
+  "d7d85823-5304-4eb3-9671-3e571fac07b9", 
   "d2789cef-106f-4660-9e3f-584c12e2e3c7",
   "bf5a799d-26d0-410e-96b0-9ada1eb9f758",
   "c22b405e-2b7b-4632-831d-54523e169a01",
   "ffdda8ad-60a2-4184-baff-5c79a2eccb8c",
-  "183b971a-79f5-4004-8182-31c88d910dca",
+  "183b971a-79f5-4004-8182-31c88d910dca", //
   "90b77f62-003d-454e-97fc-8f597b42048c",
-  "86cef02b-8c15-457b-b480-52e6cc0bdd8c"
+  "86cef02b-8c15-457b-b480-52e6cc0bdd8c", // 
+  // "755c7c73-b938-4a6e-a7be-2a3b8c3783d9", // Include for button presses later!
 };
 
 // ---------------------------------------------------------------//
@@ -128,7 +130,7 @@ GPSData readAndStoreGPS() {
 
 // Initialized Once // Not Characterisitic Specific
 static BLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-const int numServices = 30;
+const int numServices = 100; //#FIXME: not notifiying if failure of 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 BLEServer* pServer = NULL;  // Pointer to the server
@@ -158,8 +160,9 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
     BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
   // BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
 
-  // 2.b.i Create a BLE Descriptor #FIXME: descriptors not working correctly, at least I cant see the label in NRF Connect
+  // 2.b.i Create a BLE Descriptor #FIXME: descriptors not working correctly, at least I cant see the label in NRF Connect 
   pDescr = new BLEDescriptor((uint16_t)0x2901);  //The 0x2901 is the Bluetooth SIG-defined UUID for the "Characteristic User Description" descriptor. This descriptor is used to provide a human-readable description or name for the characteristic.
+  Serial.print(characteristicUUID);
   pDescr->setValue(label);
   pCharacteristic->addDescriptor(pDescr);
 
@@ -174,12 +177,7 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
 // -------- Sensor Declarations + Helper Functions ---------------//
 // ---------------------------------------------------------------//
 
-// Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
-// PM25_AQI_Data PM25Data;
-
-// Sensirion Data Rhings
-// The used commands use up to 48 bytes. On some Arduino's the default buffer
-// space is not large enough
+// Sensirion Data Rhings The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
 #define MAXBUF_REQUIREMENT 48
 
 #if (defined(I2C_BUFFER_LENGTH) &&                 \
@@ -254,32 +252,32 @@ void printSerialNumber() {
     }
 }
 
-Adafruit_ICM20948 icm;  // Initialize the ICM209448 sensor object
-unsigned long PlantMillis = 0;
-const unsigned long PlantSample = 500;
+// Adafruit_ICM20948 icm;  // Initialize the ICM209448 sensor object
+// unsigned long PlantMillis = 0;
+// const unsigned long PlantSample = 500;
 
-struct ICMData {
-  float AccelX;  // acceleration
-  float AccelY;
-  float AccelZ;
-};
+// struct ICMData {
+//   float AccelX;  // acceleration
+//   float AccelY;
+//   float AccelZ;
+// };
 
-ICMData getICMData();
+// ICMData getICMData();
 
-ICMData getICMData() {
-  ICMData ICM;
-  sensors_event_t accel;
-  sensors_event_t gyro;
-  sensors_event_t mag;
-  sensors_event_t temp;
-  icm.getEvent(&accel, &gyro, &temp, &mag);
-  // GTemp = temp.temperature; // not pulling a second temperature value but we could
+// ICMData getICMData() {
+//   ICMData ICM;
+//   sensors_event_t accel;
+//   sensors_event_t gyro;
+//   sensors_event_t mag;
+//   sensors_event_t temp;
+//   icm.getEvent(&accel, &gyro, &temp, &mag);
+//   // GTemp = temp.temperature; // not pulling a second temperature value but we could
 
-  ICM.AccelX = accel.acceleration.x;  // acceleration
-  ICM.AccelY = accel.acceleration.y;
-  ICM.AccelZ = accel.acceleration.z;
-  return ICM;
-}
+//   ICM.AccelX = accel.acceleration.x;  // acceleration
+//   ICM.AccelY = accel.acceleration.y;
+//   ICM.AccelZ = accel.acceleration.z;
+//   return ICM;
+// }
 
 std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
   char Data[15];
@@ -292,7 +290,7 @@ std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
 
 std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) {
   std::vector<std::string> sensorDataVector(NumCharacteristics);
-  ICMData ICM = getICMData();
+  // ICMData ICM = getICMData();
   char errorMessage[256];
   uint16_t error;
 
@@ -332,6 +330,7 @@ std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) 
   sensorDataVector[7] = FormatAndAppendTimestamp(vocIndex, GPSData2Transmit.ShortTimeStamp);
   sensorDataVector[8] = FormatAndAppendTimestamp(noxIndex, GPSData2Transmit.ShortTimeStamp);
   sensorDataVector[9] = FormatAndAppendTimestamp(massConcentrationPm10p0, GPSData2Transmit.ShortTimeStamp);
+  // sensorDataVector[10] = FormatAndAppendTimestamp(massConcentrationPm10p0, GPSData2Transmit.ShortTimeStamp);
 
   // // Accerleration Data
   // sensorDataVector[7] = FormatAndAppendTimestamp(ICM.AccelX, GPSData2Transmit.ShortTimeStamp);
@@ -491,6 +490,105 @@ void setup() {
     }
 
   // //---------- ICM  Begin -----------//
+
+
+  //----------- BLE Set up-------------- //
+  // 1. Service information to run once
+  BLEDevice::init(deviceName);  // You need a device
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  // BLEService* pService = pServer->createService(BLESERVICE_UUID, NumCharacteristics, 0);
+
+  BLEService* pService = pServer->createService(BLESERVICE_UUID, numServices, 0);
+
+  // 2. Set Characteristics
+  Serial.println(NumCharacteristics);
+  for (int i = 0; i < NumCharacteristics; i++) {
+    Serial.println(characteristicUUIDs[i]);
+    pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
+
+  }
+
+  // 3. Start the service
+  pService->start();
+
+  // 4. Start advertising
+  BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(BLESERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  BLEDevice::startAdvertising();
+  Serial.println("Waiting a client connection to notify...");
+
+
+}
+
+GPSData GPS2Transmit;
+
+void loop() {
+
+  GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you there
+
+  if (DummyGPSData.dataReceived == true) {  // Essential GPS Logic!
+    GPS2Transmit = DummyGPSData;
+  }
+
+  //  if ( (millis() - GlobalTimer > sampleRateGps)) { // (millis() - GlobalTimer > sampleRateGps
+  if ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
+    GlobalTimer = millis();
+    std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
+    
+    std::string Row_Data; 
+    for (int i = 0; i < NumCharacteristics; i++) {  //
+      // Serial.print(i);
+      // Serial.println(EncodedData[i].c_str());
+      pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
+      pCharacteristicChars[i]->notify();
+      Row_Data += EncodedData[i].c_str();
+      // Row_Data += ',';
+      // Serial.println(Row_Data.c_str());
+    }
+    Serial.println(Row_Data.c_str());
+
+    Row_Data += '\n';
+    if (isMemoryCardAttached){
+      appendFile(SD, NewFilePath, Row_Data.c_str()); // Corrected the function name to appendFile and added missing ".c_str()"
+          }
+
+  }
+
+
+  // --------- BLE LOGIC FOR CONNECTION AND DISCONNECTION --------//
+  // Disconnection
+  if (!deviceConnected && oldDeviceConnected && (millis() - deviceRebootMillis > 500)) {
+    deviceRebootMillis = millis();
+    pServer->startAdvertising();  // restart advertising
+    Serial.println("start advertising");
+    oldDeviceConnected = deviceConnected;
+    isEventStarted = false;
+  }
+
+  // Connection
+  if (deviceConnected && !oldDeviceConnected) {
+    oldDeviceConnected = deviceConnected;
+    
+    // pull last Event Started
+    if (isEventStarted == false){ 
+      eventCounter = PullLastEventIndex(SD, eventIndexPath);
+      sprintf(NewFilePath, "/Event%d.txt", eventCounter); // Fixed format string
+      Serial.print("New data file created");
+      Serial.println(NewFilePath);
+      String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, AccelerationX, AccelerationY, AccelerationZ";
+      writeFile(SD, NewFilePath, Header.c_str()); // Added missing ".c_str()" and semicolon
+      isEventStarted = true;
+    }
+
+  }
+
+}
+
+
+// ICM Begin code
   // if (!icm.begin_I2C()) {  // if (!icm.begin_SPI(ICM_CS)) { // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
 
   //   Serial.println("Failed to find ICM20948 chip");
@@ -576,97 +674,3 @@ void setup() {
   //   }
   //   Serial.println();
   // }
-
-  //----------- BLE Set up-------------- //
-  // 1. Service information to run once
-  BLEDevice::init(deviceName);  // You need a device
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-  // BLEService* pService = pServer->createService(BLESERVICE_UUID, NumCharacteristics, 0);
-
-  BLEService* pService = pServer->createService(BLESERVICE_UUID, 40, 0);
-
-  // 2. Set Characteristics
-  Serial.println(NumCharacteristics);
-  for (int i = 0; i < NumCharacteristics; i++) {
-    Serial.println(characteristicUUIDs[i]);
-    pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
-  }
-
-  // 3. Start the service
-  pService->start();
-
-  // 4. Start advertising
-  BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(BLESERVICE_UUID);
-  pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
-  BLEDevice::startAdvertising();
-  Serial.println("Waiting a client connection to notify...");
-
-
-}
-
-GPSData GPS2Transmit;
-
-void loop() {
-
-  GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you there
-
-  if (DummyGPSData.dataReceived == true) {  // Essential GPS Logic!
-    GPS2Transmit = DummyGPSData;
-  }
-
-  //  if ( (millis() - GlobalTimer > sampleRateGps)) { // (millis() - GlobalTimer > sampleRateGps
-  if ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
-    GlobalTimer = millis();
-    std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
-    
-    std::string Row_Data; 
-    for (int i = 0; i < NumCharacteristics; i++) {  //
-      // Serial.print(i);
-      // Serial.println(EncodedData[i].c_str());
-      pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
-      pCharacteristicChars[i]->notify();
-      Row_Data += EncodedData[i].c_str();
-      // Row_Data += ',';
-      // Serial.println(Row_Data.c_str());
-    }
-    Serial.println(Row_Data.c_str());
-
-    Row_Data += '\n';
-    if (isMemoryCardAttached){
-      appendFile(SD, NewFilePath, Row_Data.c_str()); // Corrected the function name to appendFile and added missing ".c_str()"
-          }
-
-  }
-
-
-  // --------- BLE LOGIC FOR CONNECTION AND DISCONNECTION --------//
-  // Disconnection
-  if (!deviceConnected && oldDeviceConnected && (millis() - deviceRebootMillis > 500)) {
-    deviceRebootMillis = millis();
-    pServer->startAdvertising();  // restart advertising
-    Serial.println("start advertising");
-    oldDeviceConnected = deviceConnected;
-    isEventStarted = false;
-  }
-
-  // Connection
-  if (deviceConnected && !oldDeviceConnected) {
-    oldDeviceConnected = deviceConnected;
-    
-    // pull last Event Started
-    if (isEventStarted == false){ 
-      eventCounter = PullLastEventIndex(SD, eventIndexPath);
-      sprintf(NewFilePath, "/Event%d.txt", eventCounter); // Fixed format string
-      Serial.print("New data file created");
-      Serial.println(NewFilePath);
-      String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, AccelerationX, AccelerationY, AccelerationZ";
-      writeFile(SD, NewFilePath, Header.c_str()); // Added missing ".c_str()" and semicolon
-      isEventStarted = true;
-    }
-
-  }
-
-}
