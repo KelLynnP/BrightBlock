@@ -2,24 +2,21 @@
 #include <iostream>
 #include <string>
 
-//  Make a class of button where it can refernce its own parameters:
 class LED {
 private: 
     std::string state;
-    uint32_t LEDC_CHANNEL_0;  // #FIXME -> channels can change
-    uint32_t LEDC_TIMER_12_BIT; 
+    uint32_t LEDC_CHANNEL_0;  // #FIXME -> channels can change (dig plz)
+    uint32_t LEDC_TIMER_12_BIT = 12; 
     uint32_t LEDC_BASE_FREQ; 
     uint32_t lastToggleTime; 
+
 public:
     int LedPin;
     LED(int LedPinAssigned, int ChannelSet): LedPin(LedPinAssigned), LEDC_CHANNEL_0(LEDC_CHANNEL_0) {
-      state = "low"; //declairing an instance and setting it to low //flag Idk if this is the right call !!
-      // LEDC_CHANNEL_0 = 0;
-      LEDC_TIMER_12_BIT = 12;
-      LEDC_BASE_FREQ = 5000; // use 5000 Hz as a LEDC base frequency
-      // LedPin = LedPinAssigned;
+      LEDC_BASE_FREQ = 5000; // use 5000 Hz as a LEDC base frequency// could change based on LED
+      
       lastToggleTime = millis(); 
-
+      state = "low"; 
       ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
       ledcAttachPin(LedPin, LEDC_CHANNEL_0);
     }
@@ -27,15 +24,14 @@ public:
     void ledSet(int brightnessHigh, int brightnessLow, int timingInterval){ // neeed to add flash frequency
       if ((millis() - lastToggleTime) >= timingInterval) {
         if (state == "low"){
-          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessHigh); // set up 
-          state = "high";
+          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessHigh);
+          state = "high"; 
         }
         else{
-          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessLow); // set up 
+          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessLow); 
           state = "low";
         }
         lastToggleTime = millis();
-
       }
     }
 
@@ -48,10 +44,10 @@ public:
     }
 };
 
-LED StatusLED(14,0); //okay make an instance of this guy @pin 14
+LED StatusLED(14,0); //okay make an instance of this guy @pin 14, keeping channel @0
 
 void setup() {
-  // Setup timer and attach timer to a led pin
+
 }
 
 void loop() {
