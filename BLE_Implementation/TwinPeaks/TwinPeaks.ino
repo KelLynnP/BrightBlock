@@ -28,7 +28,7 @@ unsigned long previousMillis = 0;
 const unsigned long sampleRate = 1000;
 const int NumCharacteristics = 10;
 const boolean isMemoryCardAttached = true;
-const int memoryCardPin = 27;
+const int memoryCardPin = 4;
 int eventCounter = -1;
 bool isEventStarted = false;
 const char eventIndexPath []= "/eventIndex.txt";
@@ -252,33 +252,6 @@ void printSerialNumber() {
     }
 }
 
-// Adafruit_ICM20948 icm;  // Initialize the ICM209448 sensor object
-// unsigned long PlantMillis = 0;
-// const unsigned long PlantSample = 500;
-
-// struct ICMData {
-//   float AccelX;  // acceleration
-//   float AccelY;
-//   float AccelZ;
-// };
-
-// ICMData getICMData();
-
-// ICMData getICMData() {
-//   ICMData ICM;
-//   sensors_event_t accel;
-//   sensors_event_t gyro;
-//   sensors_event_t mag;
-//   sensors_event_t temp;
-//   icm.getEvent(&accel, &gyro, &temp, &mag);
-//   // GTemp = temp.temperature; // not pulling a second temperature value but we could
-
-//   ICM.AccelX = accel.acceleration.x;  // acceleration
-//   ICM.AccelY = accel.acceleration.y;
-//   ICM.AccelZ = accel.acceleration.z;
-//   return ICM;
-// }
-
 std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
   char Data[15];
   // Serial.println(RawData);
@@ -345,9 +318,11 @@ std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) 
 // ---------------------- Button Functions -----------------------//
 // ---------------------------------------------------------------//
 
-const int buttonPin = 25;  // the number of the pushbutton pin
-int buttonState = 0;
+const int buttonPin = 36;  // the number of the pushbutton pin
+int buttonStateCount = 0;
 
+
+// int countButtonHigh
 
 // ---------------------------------------------------------------//
 // ------------------ Memory Card Stuff --------------------------//
@@ -377,6 +352,7 @@ int PullLastEventIndex(fs::FS &fs, const char * path){ //FiXme: this calls other
   appendFile(fs, path, numLinePlusOne.c_str());
 
   return numLine;
+  // return 0;
 }
 
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -489,7 +465,7 @@ void setup() {
         Serial.println(errorMessage);
     }
 
-  // //---------- ICM  Begin -----------//
+  // --------- ICM  Begin -----------//
 
 
   //----------- BLE Set up-------------- //
@@ -586,6 +562,35 @@ void loop() {
   }
 
 }
+
+
+
+// Adafruit_ICM20948 icm;  // Initialize the ICM209448 sensor object
+// unsigned long PlantMillis = 0;
+// const unsigned long PlantSample = 500;
+
+// struct ICMData {
+//   float AccelX;  // acceleration
+//   float AccelY;
+//   float AccelZ;
+// };
+
+// ICMData getICMData();
+
+// ICMData getICMData() {
+//   ICMData ICM;
+//   sensors_event_t accel;
+//   sensors_event_t gyro;
+//   sensors_event_t mag;
+//   sensors_event_t temp;
+//   icm.getEvent(&accel, &gyro, &temp, &mag);
+//   // GTemp = temp.temperature; // not pulling a second temperature value but we could
+
+//   ICM.AccelX = accel.acceleration.x;  // acceleration
+//   ICM.AccelY = accel.acceleration.y;
+//   ICM.AccelZ = accel.acceleration.z;
+//   return ICM;
+// }
 
 
 // ICM Begin code
