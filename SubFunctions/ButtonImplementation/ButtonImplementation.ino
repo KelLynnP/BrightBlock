@@ -3,7 +3,9 @@ class Button {
   public:
     void setup(uint8_t irq_pin, void (*ISR_callback)(void), int value);
     void handleInterrupt(void);
-    uint32_t getCountAndReset();
+    uint32_t getCount();
+    void resetCount();
+
 
   private:
     uint32_t countNumKeyPresses = 0;
@@ -27,11 +29,12 @@ void Button::handleInterrupt(void) {
   }
 }
 
+uint32_t Button::getCount() {
+  return countNumKeyPresses;
+}
 
-uint32_t Button::getCountAndReset() {
-  uint32_t temp = countNumKeyPresses;
+void Button::resetCount() {
   countNumKeyPresses = 0;
-  return temp;
 }
 
 // ButtonSet
@@ -54,8 +57,9 @@ void setup() {
 void loop() {
   static uint32_t lastMillis = 0;
   if (millis() - lastMillis > 5000UL) {  // Check every 5 seconds
-    Serial.printf("Log Button has been pressed %d times in the last 5 seconds\n", logEventButton->getCountAndReset());
-    Serial.printf("State Button has been pressed %d times in the last 5 seconds\n", stateButton->getCountAndReset());
+    
+    Serial.printf("Log Button has been pressed %d times in the last 5 seconds\n", logEventButton->getCount());
+    Serial.printf("State Button has been pressed %d times in the last 5 seconds\n", stateButton->getCount());
     lastMillis = millis();
   }
 }
