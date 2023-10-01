@@ -1,7 +1,0 @@
-{
-    "configuration": "LoopCore=1,EventsCore=1,PSRAM=enabled,PartitionScheme=default_8MB,CPUFreq=240,FlashFreq=80,FlashSize=8M,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
-    "board": "esp32:esp32:adafruit_feather_esp32_v2",
-    "port": "COM8",
-    "programmer": "esptool",
-    "sketch": "TestCode\\TestCode.ino"
-}

@@ -44,13 +44,16 @@ public:
     }
 };
 
-LED StatusLED(14,0); //okay make an instance of this guy @pin 14, keeping channel @0
+int brightHigh = 10;
+int brightLow = 5;
+int timeDelayMS = 1000; 
+
+LED StatusLED(25,0); //okay make an instance of this guy @pin 25, keeping channel @0
 
 void setup() {
-
 }
 
 void loop() {
-  StatusLED.ledSet(10, 5, 500);
+  StatusLED.ledSet(brightHigh, brightLow, timeDelayMS); 
 }
 

@@ -6,10 +6,10 @@
 #include "Adafruit_PM25AQI.h"
 #include <Adafruit_BME680.h>
 #include <Adafruit_ICM20948.h>
-#include <Arduino.h> // Sensirion I2C libraries (lol @ not using arduino?) 
+#include <Arduino.h>  // Sensirion I2C libraries (lol @ not using arduino?)
 #include <SensirionI2CSen5x.h>
 #include <Wire.h>
-#include "FS.h" // Memory Card files
+#include "FS.h"  // Memory Card files
 #include "SD.h"
 #include "SPI.h"
 
@@ -18,7 +18,6 @@
 #include <SoftwareSerial.h>
 #include <vector>
 #include <string>
-
 
 // ---------------------------------------------------------------//
 // ------------------ User input Info ----------------------------//
@@ -31,9 +30,8 @@ const boolean isMemoryCardAttached = true;
 const int memoryCardPin = 4;
 int eventCounter = -1;
 bool isEventStarted = false;
-const char eventIndexPath []= "/eventIndex.txt";
-char NewFilePath[30]; // Increased the buffer size
-
+const char eventIndexPath[] = "/eventIndex.txt";
+char NewFilePath[30];  // Increased the buffer size
 
 
 // -------------------- Which Sensors! ------------------------------//
@@ -56,15 +54,15 @@ const char* UUIDLabels[] = {
 
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
-  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e", //
-  "d7d85823-5304-4eb3-9671-3e571fac07b9", 
+  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",  //
+  "d7d85823-5304-4eb3-9671-3e571fac07b9",
   "d2789cef-106f-4660-9e3f-584c12e2e3c7",
   "bf5a799d-26d0-410e-96b0-9ada1eb9f758",
   "c22b405e-2b7b-4632-831d-54523e169a01",
   "ffdda8ad-60a2-4184-baff-5c79a2eccb8c",
-  "183b971a-79f5-4004-8182-31c88d910dca", //
+  "183b971a-79f5-4004-8182-31c88d910dca",  //
   "90b77f62-003d-454e-97fc-8f597b42048c",
-  "86cef02b-8c15-457b-b480-52e6cc0bdd8c", // 
+  "86cef02b-8c15-457b-b480-52e6cc0bdd8c",  //
   // "755c7c73-b938-4a6e-a7be-2a3b8c3783d9", // Include for button presses later!
 };
 
@@ -130,7 +128,7 @@ GPSData readAndStoreGPS() {
 
 // Initialized Once // Not Characterisitic Specific
 static BLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-const int numServices = 100; //#FIXME: not notifiying if failure of 
+const int numServices = 100;  //#FIXME: not notifiying if failure of
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 BLEServer* pServer = NULL;  // Pointer to the server
@@ -160,7 +158,7 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
     BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ);
   // BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
 
-  // 2.b.i Create a BLE Descriptor #FIXME: descriptors not working correctly, at least I cant see the label in NRF Connect 
+  // 2.b.i Create a BLE Descriptor #FIXME: descriptors not working correctly, at least I cant see the label in NRF Connect
   pDescr = new BLEDescriptor((uint16_t)0x2901);  //The 0x2901 is the Bluetooth SIG-defined UUID for the "Characteristic User Description" descriptor. This descriptor is used to provide a human-readable description or name for the characteristic.
   Serial.print(characteristicUUID);
   pDescr->setValue(label);
@@ -180,76 +178,74 @@ BLECharacteristic* intializeBLECharacteristic(BLECharacteristic* pCharacteristic
 // Sensirion Data Rhings The used commands use up to 48 bytes. On some Arduino's the default buffer space is not large enough
 #define MAXBUF_REQUIREMENT 48
 
-#if (defined(I2C_BUFFER_LENGTH) &&                 \
-     (I2C_BUFFER_LENGTH >= MAXBUF_REQUIREMENT)) || \
-    (defined(BUFFER_LENGTH) && BUFFER_LENGTH >= MAXBUF_REQUIREMENT)
+#if (defined(I2C_BUFFER_LENGTH) && (I2C_BUFFER_LENGTH >= MAXBUF_REQUIREMENT)) || (defined(BUFFER_LENGTH) && BUFFER_LENGTH >= MAXBUF_REQUIREMENT)
 #define USE_PRODUCT_INFO
 #endif
 
 SensirionI2CSen5x sen5x;
 
 void printModuleVersions() {
-    uint16_t error;
-    char errorMessage[256];
+  uint16_t error;
+  char errorMessage[256];
 
-    unsigned char productName[32];
-    uint8_t productNameSize = 32;
+  unsigned char productName[32];
+  uint8_t productNameSize = 32;
 
-    error = sen5x.getProductName(productName, productNameSize);
+  error = sen5x.getProductName(productName, productNameSize);
 
-    if (error) {
-        Serial.print("Error trying to execute getProductName(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
-        Serial.print("ProductName:");
-        Serial.println((char*)productName);
-    }
+  if (error) {
+    Serial.print("Error trying to execute getProductName(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  } else {
+    Serial.print("ProductName:");
+    Serial.println((char*)productName);
+  }
 
-    uint8_t firmwareMajor;
-    uint8_t firmwareMinor;
-    bool firmwareDebug;
-    uint8_t hardwareMajor;
-    uint8_t hardwareMinor;
-    uint8_t protocolMajor;
-    uint8_t protocolMinor;
+  uint8_t firmwareMajor;
+  uint8_t firmwareMinor;
+  bool firmwareDebug;
+  uint8_t hardwareMajor;
+  uint8_t hardwareMinor;
+  uint8_t protocolMajor;
+  uint8_t protocolMinor;
 
-    error = sen5x.getVersion(firmwareMajor, firmwareMinor, firmwareDebug,
-                             hardwareMajor, hardwareMinor, protocolMajor,
-                             protocolMinor);
-    if (error) {
-        Serial.print("Error trying to execute getVersion(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
-        Serial.print("Firmware: ");
-        Serial.print(firmwareMajor);
-        Serial.print(".");
-        Serial.print(firmwareMinor);
-        Serial.print(", ");
+  error = sen5x.getVersion(firmwareMajor, firmwareMinor, firmwareDebug,
+                           hardwareMajor, hardwareMinor, protocolMajor,
+                           protocolMinor);
+  if (error) {
+    Serial.print("Error trying to execute getVersion(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  } else {
+    Serial.print("Firmware: ");
+    Serial.print(firmwareMajor);
+    Serial.print(".");
+    Serial.print(firmwareMinor);
+    Serial.print(", ");
 
-        Serial.print("Hardware: ");
-        Serial.print(hardwareMajor);
-        Serial.print(".");
-        Serial.println(hardwareMinor);
-    }
+    Serial.print("Hardware: ");
+    Serial.print(hardwareMajor);
+    Serial.print(".");
+    Serial.println(hardwareMinor);
+  }
 }
 
 void printSerialNumber() {
-    uint16_t error;
-    char errorMessage[256];
-    unsigned char serialNumber[32];
-    uint8_t serialNumberSize = 32;
+  uint16_t error;
+  char errorMessage[256];
+  unsigned char serialNumber[32];
+  uint8_t serialNumberSize = 32;
 
-    error = sen5x.getSerialNumber(serialNumber, serialNumberSize);
-    if (error) {
-        Serial.print("Error trying to execute getSerialNumber(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
-        Serial.print("SerialNumber:");
-        Serial.println((char*)serialNumber);
-    }
+  error = sen5x.getSerialNumber(serialNumber, serialNumberSize);
+  if (error) {
+    Serial.print("Error trying to execute getSerialNumber(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  } else {
+    Serial.print("SerialNumber:");
+    Serial.println((char*)serialNumber);
+  }
 }
 
 std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
@@ -278,14 +274,15 @@ std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit) 
   float noxIndex;
 
   error = sen5x.readMeasuredValues(
-      massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
-      massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
-      noxIndex);
+    massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
+    massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
+    noxIndex);
 
   if (error) {
-      Serial.print("Error trying to execute readMeasuredValues(): ");
-      errorToString(error, errorMessage, 256);
-      Serial.println(errorMessage);}
+    Serial.print("Error trying to execute readMeasuredValues(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  }
 
   // GPS Data All pulled seperatly
   sensorDataVector[0] = GPSData2Transmit.FullTimeStamp;
@@ -328,14 +325,14 @@ int buttonStateCount = 0;
 // ------------------ Memory Card Stuff --------------------------//
 // ---------------------------------------------------------------//
 
-int PullLastEventIndex(fs::FS &fs, const char * path){ //FiXme: this calls other helper functions nested inside, i am okay with it because it helps declutter the already cluttered code below. 
-  Serial.println("Starting PullLastEventIndex ");    
-  
+int PullLastEventIndex(fs::FS& fs, const char* path) {  //FiXme: this calls other helper functions nested inside, i am okay with it because it helps declutter the already cluttered code below.
+  Serial.println("Starting PullLastEventIndex ");
+
   File file = fs.open(path, FILE_READ);
   String line;
-  if(!file){
-      Serial.println("Failed to open file for appending");
-      return -1;
+  if (!file) {
+    Serial.println("Failed to open file for appending");
+    return -1;
   }
 
   while (file.available()) {
@@ -343,7 +340,7 @@ int PullLastEventIndex(fs::FS &fs, const char * path){ //FiXme: this calls other
     Serial.println(line);
   }
 
-  int numLine = std::stoi(line.c_str());  
+  int numLine = std::stoi(line.c_str());
   Serial.printf("Appending to file: %s\n", path);
   std::string numLinePlusOne = std::to_string(numLine + 1);
   numLinePlusOne += ',';
@@ -355,36 +352,36 @@ int PullLastEventIndex(fs::FS &fs, const char * path){ //FiXme: this calls other
   // return 0;
 }
 
-void writeFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Writing file: %s\n", path);
+void writeFile(fs::FS& fs, const char* path, const char* message) {
+  Serial.printf("Writing file: %s\n", path);
 
-    File file = fs.open(path, FILE_WRITE);
-    if(!file){
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("File written");
-    } else {
-        Serial.println("Write failed");
-    }
-    file.close();
+  File file = fs.open(path, FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if (file.print(message)) {
+    Serial.println("File written");
+  } else {
+    Serial.println("Write failed");
+  }
+  file.close();
 }
 
-void appendFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Appending to file: %s\n", path);
+void appendFile(fs::FS& fs, const char* path, const char* message) {
+  Serial.printf("Appending to file: %s\n", path);
 
-    File file = fs.open(path, FILE_APPEND);
-    if(!file){
-        Serial.println("Failed to open file for appending");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("Message appended");
-    } else {
-        Serial.println("Append failed");
-    }
-    file.close();
+  File file = fs.open(path, FILE_APPEND);
+  if (!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if (file.print(message)) {
+    Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
 }
 
 
@@ -393,27 +390,27 @@ void setup() {
   Serial.begin(115200);
 
   //----------- Memory Card Begin ------------- //
-  if(!SD.begin(memoryCardPin)){
-      Serial.println("Card Mount Failed");
-      return;
-    }
-    uint8_t cardType = SD.cardType();
+  if (!SD.begin(memoryCardPin)) {
+    Serial.println("Card Mount Failed");
+    return;
+  }
+  uint8_t cardType = SD.cardType();
 
-    if(cardType == CARD_NONE){
-      Serial.println("No SD card attached");
-      return;
-    }
+  if (cardType == CARD_NONE) {
+    Serial.println("No SD card attached");
+    return;
+  }
 
-    Serial.print("SD Card Type: ");
-    if(cardType == CARD_MMC){
-      Serial.println("MMC");
-    } else if(cardType == CARD_SD){
-      Serial.println("SDSC");
-    } else if(cardType == CARD_SDHC){
-      Serial.println("SDHC");
-    } else {
-      Serial.println("UNKNOWN");
-    }
+  Serial.print("SD Card Type: ");
+  if (cardType == CARD_MMC) {
+    Serial.println("MMC");
+  } else if (cardType == CARD_SD) {
+    Serial.println("SDSC");
+  } else if (cardType == CARD_SDHC) {
+    Serial.println("SDHC");
+  } else {
+    Serial.println("UNKNOWN");
+  }
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
 
 
@@ -429,43 +426,41 @@ void setup() {
   sen5x.begin(Wire);
 
   char errorMessage[256];
-  
+
   uint16_t error;
   error = sen5x.deviceReset();
   if (error) {
-      Serial.print("Error trying to execute deviceReset(): ");
-      errorToString(error, errorMessage, 256);
-      Serial.println(errorMessage);
+    Serial.print("Error trying to execute deviceReset(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
   }
 
-  // Print SEN55 module information if i2c buffers are large enough
-  #ifdef USE_PRODUCT_INFO
-      printSerialNumber();
-      printModuleVersions();
-  #endif
+// Print SEN55 module information if i2c buffers are large enough
+#ifdef USE_PRODUCT_INFO
+  printSerialNumber();
+  printModuleVersions();
+#endif
 
-    // Look at temp offset info in Notion
-    float tempOffset = 0.0;
-    error = sen5x.setTemperatureOffsetSimple(tempOffset);
-    if (error) {
-        Serial.print("Error trying to execute setTemperatureOffsetSimple(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
-        Serial.print("Temperature Offset set to ");
-        Serial.print(tempOffset);
-        Serial.println(" deg. Celsius (SEN54/SEN55 only");
-    }
+  // Look at temp offset info in Notion
+  float tempOffset = 0.0;
+  error = sen5x.setTemperatureOffsetSimple(tempOffset);
+  if (error) {
+    Serial.print("Error trying to execute setTemperatureOffsetSimple(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  } else {
+    Serial.print("Temperature Offset set to ");
+    Serial.print(tempOffset);
+    Serial.println(" deg. Celsius (SEN54/SEN55 only");
+  }
 
-    // Start Measurement
-    error = sen5x.startMeasurement();
-    if (error) {
-        Serial.print("Error trying to execute startMeasurement(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    }
-
-  // --------- ICM  Begin -----------//
+  // Start Measurement
+  error = sen5x.startMeasurement();
+  if (error) {
+    Serial.print("Error trying to execute startMeasurement(): ");
+    errorToString(error, errorMessage, 256);
+    Serial.println(errorMessage);
+  }
 
 
   //----------- BLE Set up-------------- //
@@ -482,7 +477,6 @@ void setup() {
   for (int i = 0; i < NumCharacteristics; i++) {
     Serial.println(characteristicUUIDs[i]);
     pCharacteristicChars[i] = intializeBLECharacteristic(pCharacteristicChars[i], pService, characteristicUUIDs[i], UUIDLabels[i]);
-
   }
 
   // 3. Start the service
@@ -495,8 +489,6 @@ void setup() {
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
-
-
 }
 
 GPSData GPS2Transmit;
@@ -513,8 +505,8 @@ void loop() {
   if ((deviceConnected) && (millis() - GlobalTimer > sampleRateGps)) {
     GlobalTimer = millis();
     std::vector<std::string> EncodedData = PullAndTranscribeData(GPS2Transmit);
-    
-    std::string Row_Data; 
+
+    std::string Row_Data;
     for (int i = 0; i < NumCharacteristics; i++) {  //
       // Serial.print(i);
       // Serial.println(EncodedData[i].c_str());
@@ -527,10 +519,9 @@ void loop() {
     Serial.println(Row_Data.c_str());
 
     Row_Data += '\n';
-    if (isMemoryCardAttached){
-      appendFile(SD, NewFilePath, Row_Data.c_str()); // Corrected the function name to appendFile and added missing ".c_str()"
-          }
-
+    if (isMemoryCardAttached) {
+      appendFile(SD, NewFilePath, Row_Data.c_str());  // Corrected the function name to appendFile and added missing ".c_str()"
+    }
   }
 
 
@@ -547,20 +538,18 @@ void loop() {
   // Connection
   if (deviceConnected && !oldDeviceConnected) {
     oldDeviceConnected = deviceConnected;
-    
+
     // pull last Event Started
-    if (isEventStarted == false){ 
+    if (isEventStarted == false) {
       eventCounter = PullLastEventIndex(SD, eventIndexPath);
-      sprintf(NewFilePath, "/Event%d.txt", eventCounter); // Fixed format string
+      sprintf(NewFilePath, "/Event%d.txt", eventCounter);  // Fixed format string
       Serial.print("New data file created");
       Serial.println(NewFilePath);
       String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, AccelerationX, AccelerationY, AccelerationZ";
-      writeFile(SD, NewFilePath, Header.c_str()); // Added missing ".c_str()" and semicolon
+      writeFile(SD, NewFilePath, Header.c_str());  // Added missing ".c_str()" and semicolon
       isEventStarted = true;
     }
-
   }
-
 }
 
 
@@ -594,88 +583,88 @@ void loop() {
 
 
 // ICM Begin code
-  // if (!icm.begin_I2C()) {  // if (!icm.begin_SPI(ICM_CS)) { // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
+// if (!icm.begin_I2C()) {  // if (!icm.begin_SPI(ICM_CS)) { // if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
 
-  //   Serial.println("Failed to find ICM20948 chip");
-  //   while (1) {
-  //     delay(10);
-  //     break;
-  //   }
-  // } else {
-  //   Serial.println("ICM20948 Found!");
-  //   // icm.setAccelRange(ICM20948_ACCEL_RANGE_16_G);
-  //   Serial.print("Accelerometer range set to: ");
-  //   switch (icm.getAccelRange()) {
-  //     case ICM20948_ACCEL_RANGE_2_G:
-  //       Serial.println("+-2G");
-  //       break;
-  //     case ICM20948_ACCEL_RANGE_4_G:
-  //       Serial.println("+-4G");
-  //       break;
-  //     case ICM20948_ACCEL_RANGE_8_G:
-  //       Serial.println("+-8G");
-  //       break;
-  //     case ICM20948_ACCEL_RANGE_16_G:
-  //       Serial.println("+-16G");
-  //       break;
-  //   }
-  //   // Serial.println("OK");
-  //   // icm.setGyroRange(ICM20948_GYRO_RANGE_2000_DPS);
-  //   Serial.print("Gyro range set to: ");
-  //   switch (icm.getGyroRange()) {
-  //     case ICM20948_GYRO_RANGE_250_DPS:
-  //       Serial.println("250 degrees/s");
-  //       break;
-  //     case ICM20948_GYRO_RANGE_500_DPS:
-  //       Serial.println("500 degrees/s");
-  //       break;
-  //     case ICM20948_GYRO_RANGE_1000_DPS:
-  //       Serial.println("1000 degrees/s");
-  //       break;
-  //     case ICM20948_GYRO_RANGE_2000_DPS:
-  //       Serial.println("2000 degrees/s");
-  //       break;
-  //   }
+//   Serial.println("Failed to find ICM20948 chip");
+//   while (1) {
+//     delay(10);
+//     break;
+//   }
+// } else {
+//   Serial.println("ICM20948 Found!");
+//   // icm.setAccelRange(ICM20948_ACCEL_RANGE_16_G);
+//   Serial.print("Accelerometer range set to: ");
+//   switch (icm.getAccelRange()) {
+//     case ICM20948_ACCEL_RANGE_2_G:
+//       Serial.println("+-2G");
+//       break;
+//     case ICM20948_ACCEL_RANGE_4_G:
+//       Serial.println("+-4G");
+//       break;
+//     case ICM20948_ACCEL_RANGE_8_G:
+//       Serial.println("+-8G");
+//       break;
+//     case ICM20948_ACCEL_RANGE_16_G:
+//       Serial.println("+-16G");
+//       break;
+//   }
+//   // Serial.println("OK");
+//   // icm.setGyroRange(ICM20948_GYRO_RANGE_2000_DPS);
+//   Serial.print("Gyro range set to: ");
+//   switch (icm.getGyroRange()) {
+//     case ICM20948_GYRO_RANGE_250_DPS:
+//       Serial.println("250 degrees/s");
+//       break;
+//     case ICM20948_GYRO_RANGE_500_DPS:
+//       Serial.println("500 degrees/s");
+//       break;
+//     case ICM20948_GYRO_RANGE_1000_DPS:
+//       Serial.println("1000 degrees/s");
+//       break;
+//     case ICM20948_GYRO_RANGE_2000_DPS:
+//       Serial.println("2000 degrees/s");
+//       break;
+//   }
 
-  //   //  icm.setAccelRateDivisor(4095);
-  //   uint16_t accel_divisor = icm.getAccelRateDivisor();
-  //   float accel_rate = 1125 / (1.0 + accel_divisor);
+//   //  icm.setAccelRateDivisor(4095);
+//   uint16_t accel_divisor = icm.getAccelRateDivisor();
+//   float accel_rate = 1125 / (1.0 + accel_divisor);
 
-  //   Serial.print("Accelerometer data rate divisor set to: ");
-  //   Serial.println(accel_divisor);
-  //   Serial.print("Accelerometer data rate (Hz) is approximately: ");
-  //   Serial.println(accel_rate);
+//   Serial.print("Accelerometer data rate divisor set to: ");
+//   Serial.println(accel_divisor);
+//   Serial.print("Accelerometer data rate (Hz) is approximately: ");
+//   Serial.println(accel_rate);
 
-  //   //  icm.setGyroRateDivisor(255);
-  //   uint8_t gyro_divisor = icm.getGyroRateDivisor();
-  //   float gyro_rate = 1100 / (1.0 + gyro_divisor);
+//   //  icm.setGyroRateDivisor(255);
+//   uint8_t gyro_divisor = icm.getGyroRateDivisor();
+//   float gyro_rate = 1100 / (1.0 + gyro_divisor);
 
-  //   Serial.print("Gyro data rate divisor set to: ");
-  //   Serial.println(gyro_divisor);
-  //   Serial.print("Gyro data rate (Hz) is approximately: ");
-  //   Serial.println(gyro_rate);
+//   Serial.print("Gyro data rate divisor set to: ");
+//   Serial.println(gyro_divisor);
+//   Serial.print("Gyro data rate (Hz) is approximately: ");
+//   Serial.println(gyro_rate);
 
-  //   // icm.setMagDataRate(AK09916_MAG_DATARATE_10_HZ);
-  //   Serial.print("Magnetometer data rate set to: ");
-  //   switch (icm.getMagDataRate()) {
-  //     case AK09916_MAG_DATARATE_SHUTDOWN:
-  //       Serial.println("Shutdown");
-  //       break;
-  //     case AK09916_MAG_DATARATE_SINGLE:
-  //       Serial.println("Single/One shot");
-  //       break;
-  //     case AK09916_MAG_DATARATE_10_HZ:
-  //       Serial.println("10 Hz");
-  //       break;
-  //     case AK09916_MAG_DATARATE_20_HZ:
-  //       Serial.println("20 Hz");
-  //       break;
-  //     case AK09916_MAG_DATARATE_50_HZ:
-  //       Serial.println("50 Hz");
-  //       break;
-  //     case AK09916_MAG_DATARATE_100_HZ:
-  //       Serial.println("100 Hz");
-  //       break;
-  //   }
-  //   Serial.println();
-  // }
+//   // icm.setMagDataRate(AK09916_MAG_DATARATE_10_HZ);
+//   Serial.print("Magnetometer data rate set to: ");
+//   switch (icm.getMagDataRate()) {
+//     case AK09916_MAG_DATARATE_SHUTDOWN:
+//       Serial.println("Shutdown");
+//       break;
+//     case AK09916_MAG_DATARATE_SINGLE:
+//       Serial.println("Single/One shot");
+//       break;
+//     case AK09916_MAG_DATARATE_10_HZ:
+//       Serial.println("10 Hz");
+//       break;
+//     case AK09916_MAG_DATARATE_20_HZ:
+//       Serial.println("20 Hz");
+//       break;
+//     case AK09916_MAG_DATARATE_50_HZ:
+//       Serial.println("50 Hz");
+//       break;
+//     case AK09916_MAG_DATARATE_100_HZ:
+//       Serial.println("100 Hz");
+//       break;
+//   }
+//   Serial.println();
+// }
