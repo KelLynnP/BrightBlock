@@ -39,10 +39,10 @@ void Button::resetCount() {
 
 // ButtonSet
 Button* logEventButton;
-uint8_t logEventButtonPin = 14;
+uint8_t logEventButtonPin = 13;
 
 Button* stateButton;
-uint8_t stateButtonPin = 26;
+uint8_t stateButtonPin = 18;
 
 void setup() {
   Serial.begin(115200);

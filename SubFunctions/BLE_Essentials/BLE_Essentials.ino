@@ -95,8 +95,6 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
 
-
-
 }
 
 void loop() {

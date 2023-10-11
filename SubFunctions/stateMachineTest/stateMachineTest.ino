@@ -20,60 +20,59 @@ class Button {
     bool boolPrint = true;  // Set a default value
   };
 
-void Button::setup(uint8_t irq_pin, void (*ISR_callback)(void), int value) {
-  pinMode(irq_pin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(irq_pin), ISR_callback, value);
-  Serial.println("Button Initialized");
-}
+  void Button::setup(uint8_t irq_pin, void (*ISR_callback)(void), int value) {
+    pinMode(irq_pin, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(irq_pin), ISR_callback, value);
+    Serial.println("Button Initialized");
+    }
 
-void Button::handleInterrupt(void) {
-  rightNowButtonPressTime = millis();
-  if (rightNowButtonPressTime - timeSinceLastPress >= debounceTime) {
-    countNumKeyPresses++;
-    timeSinceLastPress = rightNowButtonPressTime;
-  }
-}
 
-uint32_t Button::getCount() {
-  return countNumKeyPresses;
-}
-
-void Button::resetCount() {
+  void Button::handleInterrupt(void) {
+    rightNowButtonPressTime = millis();
+    if (rightNowButtonPressTime - timeSinceLastPress >= debounceTime) {
+      countNumKeyPresses++;
+      timeSinceLastPress = rightNowButtonPressTime;
+    }
+    }
+  uint32_t Button::getCount() {
+    return countNumKeyPresses;
+    }
+  void Button::resetCount() {
   countNumKeyPresses = 0;
-}
+  }
 
 // LED STUFF
 class LED {
-private:
-  std::string state;
-  uint32_t LEDC_CHANNEL_0;  // #FIXME -> channels can change (dig plz)
-  uint32_t LEDC_TIMER_12_BIT = 12;
-  uint32_t LEDC_BASE_FREQ;
-  uint32_t lastToggleTime;
+  private:
+    std::string state;
+    uint32_t LEDC_CHANNEL_0;  // #FIXME -> channels can change (dig plz)
+    uint32_t LEDC_TIMER_12_BIT = 12;
+    uint32_t LEDC_BASE_FREQ;
+    uint32_t lastToggleTime;
 
-public:
-  int LedPin;
-  LED(int LedPinAssigned, int ChannelSet)
-    : LedPin(LedPinAssigned), LEDC_CHANNEL_0(LEDC_CHANNEL_0) {
-    LEDC_BASE_FREQ = 5000;  // use 5000 Hz as a LEDC base frequency// could change based on LED
+  public:
+    int LedPin;
+    LED(int LedPinAssigned, int ChannelSet)
+      : LedPin(LedPinAssigned), LEDC_CHANNEL_0(LEDC_CHANNEL_0) {
+      LEDC_BASE_FREQ = 5000;  // use 5000 Hz as a LEDC base frequency// could change based on LED
 
-    lastToggleTime = millis();
-    state = "low";
-    ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-    ledcAttachPin(LedPin, LEDC_CHANNEL_0);
-  }
-
-  void ledSet(int brightnessHigh, int brightnessLow, int timingInterval) {  // neeed to add flash frequency
-    if ((millis() - lastToggleTime) >= timingInterval) {
-      if (state == "low") {
-        ledcAnalogWrite(LEDC_CHANNEL_0, brightnessHigh);
-        state = "high";
-      } else {
-        ledcAnalogWrite(LEDC_CHANNEL_0, brightnessLow);
-        state = "low";
-      }
       lastToggleTime = millis();
+      state = "low";
+      ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
+      ledcAttachPin(LedPin, LEDC_CHANNEL_0);
     }
+
+    void ledSet(int brightnessHigh, int brightnessLow, int timingInterval) {  // neeed to add flash frequency
+      if ((millis() - lastToggleTime) >= timingInterval) {
+        if (state == "low") {
+          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessHigh);
+          state = "high";
+        } else {
+          ledcAnalogWrite(LEDC_CHANNEL_0, brightnessLow);
+          state = "low";
+        }
+        lastToggleTime = millis();
+      }
   }
 
   void ledcAnalogWrite(uint8_t channel, uint32_t value) {
@@ -143,7 +142,7 @@ void loop() {
 
 void idleState() {
   Serial.printf("Idle State ! Nothing 2 c here :) \n");
-  Serial.printf("Just waiting until the state button is pressed to change:  %d \n", stateButton->getCount());
+  // Serial.printf("Just waiting until the state button is pressed to change:  %d \n", stateButton->getCount());
   StatusLED.ledSet(0, 0, timeDelayMS);
 
 

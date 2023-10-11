@@ -2,6 +2,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+
 #include <Adafruit_GPS.h>
 #include "Adafruit_PM25AQI.h"
 #include <Adafruit_BME680.h>
@@ -9,6 +10,7 @@
 #include <Arduino.h>  // Sensirion I2C libraries (lol @ not using arduino?)
 #include <SensirionI2CSen5x.h>
 #include <Wire.h>
+
 #include "FS.h"  // Memory Card files
 #include "SD.h"
 #include "SPI.h"
