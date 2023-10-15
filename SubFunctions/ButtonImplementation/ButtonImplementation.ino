@@ -42,7 +42,7 @@ Button* logEventButton;
 uint8_t logEventButtonPin = 13;
 
 Button* stateButton;
-uint8_t stateButtonPin = 18;
+uint8_t stateButtonPin = 26;
 
 void setup() {
   Serial.begin(115200);

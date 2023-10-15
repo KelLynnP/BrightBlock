@@ -1,24 +1,24 @@
 #include <NimBLEDevice.h>
 #include <unordered_map>
 
-static NimBLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-static NimBLEServer* pServer;
+// static NimBLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+// bool deviceConnected = false;
+// bool oldDeviceConnected = false;
+// static NimBLEServer* pServer;
 
-const char* characteristicUUIDs[] = {
-  "beb5483e-36e1-4688-b7f5-ea07361b26a8",
-  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
-  "d7d85823-5304-4eb3-9671-3e571fac07b9",
-  "d2789cef-106f-4660-9e3f-584c12e2e3c7",
-};
+// const char* characteristicUUIDs[] = {
+//   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+//   "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
+//   "d7d85823-5304-4eb3-9671-3e571fac07b9",
+//   "d2789cef-106f-4660-9e3f-584c12e2e3c7",
+// };
 
-const char* UUIDLabels[] = {
-  "TimeStamp",
-  "Latitude",
-  "Longitude",
-  "Altitude"
-};
+// const char* UUIDLabels[] = {
+//   "TimeStamp",
+//   "Latitude",
+//   "Longitude",
+//   "Altitude"
+// };
 
 class MyServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer) override {

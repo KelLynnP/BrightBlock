@@ -1,4 +1,5 @@
-
+#include <Arduino.h>
+#include <driver/ledc.h>
 #include <iostream>
 #include <string>
 
@@ -12,13 +13,12 @@ private:
 
 public:
     int LedPin;
-    LED(int LedPinAssigned, int ChannelSet): LedPin(LedPinAssigned), LEDC_CHANNEL_0(LEDC_CHANNEL_0) {
+    LED(int LedPinAssigned, int ChannelSet): LedPin(LedPinAssigned), LEDC_CHANNEL_0(ChannelSet) {
       LEDC_BASE_FREQ = 5000; // use 5000 Hz as a LEDC base frequency// could change based on LED
-      
       lastToggleTime = millis(); 
       state = "low"; 
       ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
-      ledcAttachPin(LedPin, LEDC_CHANNEL_0);
+      ledcAttachPin(LedPinAssigned, LEDC_CHANNEL_0);
     }
 
     void ledSet(int brightnessHigh, int brightnessLow, int timingInterval){ // neeed to add flash frequency
@@ -26,10 +26,11 @@ public:
         if (state == "low"){
           ledcAnalogWrite(LEDC_CHANNEL_0, brightnessHigh);
           state = "high"; 
-        }
-        else{
+          // Serial.println("Writing High ");
+        }else{
           ledcAnalogWrite(LEDC_CHANNEL_0, brightnessLow); 
           state = "low";
+          // Serial.println("Writing Low ");
         }
         lastToggleTime = millis();
       }
@@ -44,13 +45,14 @@ public:
     }
 };
 
-int brightHigh = 10;
+int brightHigh = 30;
 int brightLow = 5;
 int timeDelayMS = 1000; 
 
 LED StatusLED(25,0); //okay make an instance of this guy @pin 25, keeping channel @0
 
 void setup() {
+  Serial.begin(115200);
 }
 
 void loop() {
