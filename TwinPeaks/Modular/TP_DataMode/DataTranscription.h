@@ -5,7 +5,7 @@
 #include <vector>
 
 class GPSHandler;  
-class Sen55;    
+class Sen55Handler;    
 class Button;
 
 class DataTranscription {

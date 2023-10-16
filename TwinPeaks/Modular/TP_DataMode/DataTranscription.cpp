@@ -1,6 +1,6 @@
 #include "DataTranscription.h"
 #include "GPSHandler.h"
-#include "Sen55Hanlder.h"
+#include "Sen55Handler.h"
 #include "Button.h"
 
 std::vector<std::string> DataTranscription::PullAndTranscribeData(const GPSData& GPSData2Transmit, const Sen55& Sen55Data, int buttonCounts ) {
