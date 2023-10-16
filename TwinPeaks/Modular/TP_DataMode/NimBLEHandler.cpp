@@ -1,10 +1,9 @@
-#include <NimBLEDevice.h>
-#include <unordered_map>
+#include "NimBLEHandler.h"
+
+// pre Allocates Characteristic array 
+NimBLECharacteristic* NimBLEHandler::pCharacteristicChars[NimBLEHandler::NumCharacteristics] = { NULL };
 
 static NimBLEUUID BLESERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-static NimBLEServer* pServer;
 
 const char* UUIDLabels[] = {
   "TimeStamp",         // From GPS
@@ -20,8 +19,6 @@ const char* UUIDLabels[] = {
   "ButtonPress"        // From Input button
 };
 
-const int NumCharacteristics = sizeof(UUIDLabels) / sizeof(UUIDLabels[0]);
-
 const char* characteristicUUIDs[] = {
   "beb5483e-36e1-4688-b7f5-ea07361b26a8",
   "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e",
@@ -36,16 +33,20 @@ const char* characteristicUUIDs[] = {
   "755c7c73-b938-4a6e-a7be-2a3b8c3783d9",
 };
 
-class MyServerCallbacks : public NimBLEServerCallbacks {
-  void onConnect(NimBLEServer* pServer) override {
-    deviceConnected = true;
-  };
+// connection logic 
+bool NimBLEHandler::deviceConnected = false;
+bool NimBLEHandler::oldDeviceConnected = false;
+NimBLEServer* NimBLEHandler::pServer = nullptr;
 
-  void onDisconnect(NimBLEServer* pServer) override {
-    deviceConnected = false;
-  };
-};
+void MyServerCallbacks::onConnect(NimBLEServer* pServer) {
+    NimBLEHandler::deviceConnected = true;
+}
 
+void MyServerCallbacks::onDisconnect(NimBLEServer* pServer) {
+    NimBLEHandler::deviceConnected = false;
+}
+
+// Runs for each UUID
 NimBLECharacteristic* intializeBLECharacteristic(NimBLECharacteristic* pCharacteristic, NimBLEService* pService, const char* characteristicUUID, const char* label) {
   pCharacteristic = pService->createCharacteristic(
     characteristicUUID,
@@ -54,17 +55,15 @@ NimBLECharacteristic* intializeBLECharacteristic(NimBLECharacteristic* pCharacte
 
   pCharacteristic->createDescriptor("2901", NIMBLE_PROPERTY::READ)->setValue(label);
 
-  // pCharacteristic->createDescriptor(NimBLEUUID((uint16_t)0x2902), NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
-
   return pCharacteristic;
 }
 
-NimBLECharacteristic* pCharacteristicChars[NumCharacteristics] = { NULL };
+// Runs one time to setup
+void NimBLEHandler::setupBLE(std::string deviceName, static NimBLEUUID, char* UUIDLabels[]) { // can either pass through 
 
-void setup() {
-  Serial.begin(115200);
+  const int NimBLEHandler::NumCharacteristics = sizeof(UUIDLabels) / sizeof(UUIDLabels[0]);
 
-  NimBLEDevice::init("Bleep");
+  NimBLEDevice::init(deviceName);
   pServer = NimBLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
@@ -83,14 +82,11 @@ void setup() {
   Serial.println("Waiting for a client connection to notify...");
 }
 
-void loop() {
-
-  std::string DummyTimestamp = "04:32:27 13/06/0023";
-
+void NimBLEHandler::SendData(std::vector<std::string> EncodedData ) { 
+   
   for(int i=0; i<NumCharacteristics; i++) {
-    pCharacteristicChars[i]->setValue(DummyTimestamp);
+    pCharacteristicChars[i]->setValue(std::string(EncodedData[i]));
     pCharacteristicChars[i]->notify();
-    delay(500);
   }
 
   if (!deviceConnected && oldDeviceConnected) {
@@ -105,3 +101,27 @@ void loop() {
     oldDeviceConnected = deviceConnected;
   }
 }
+
+void NimBLEHandler::SendNotificationDummy() { 
+   
+  std::string DummyTimestamp = "04:32:27 13/06/0023";
+
+  for(int i=0; i<NumCharacteristics; i++) {
+    pCharacteristicChars[i]->setValue(DummyTimestamp);
+    pCharacteristicChars[i]->notify();
+    delay(500);
+  }
+
+  if (!deviceConnected && oldDeviceConnected) { /// this logic may need to belong in the larger loop
+    delay(500);
+    NimBLEDevice::startAdvertising();
+    Serial.println("start advertising");
+    oldDeviceConnected = deviceConnected;
+  }
+
+  if (deviceConnected && !oldDeviceConnected) {
+    Serial.println("Device Connected");
+    oldDeviceConnected = deviceConnected;
+  }
+}
+
