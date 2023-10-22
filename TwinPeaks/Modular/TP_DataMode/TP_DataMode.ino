@@ -2,9 +2,9 @@
 #include "Button.h"
 #include "LED.h"
 
-const char* UUIDLabels[];
-const char* characteristicUUIDs[];
-const int NumCharacteristics;
+// const char* UUIDLabels[];
+// const char* characteristicUUIDs[];
+// const int NumCharacteristics;
 
 // GPS handler
 GPSHandler gpsHandler(Serial1);
