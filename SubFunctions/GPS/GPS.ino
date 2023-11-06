@@ -13,7 +13,7 @@ public:
     void setup() {
         GPS.begin(9600);
         GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-        GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
+        GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ); // 1 Hz update rate
     }
 
     struct GPSData {
@@ -30,7 +30,7 @@ public:
         char c = GPS.read();
         // Serial.print(c);
 
-        if (GPS.newNMEAreceived()) {
+        if (GPS.newNMEAreceived() && (GPS.fix == 0)) {
             if (!GPS.parse(GPS.lastNMEA())) return TempGPS;
         }
 
@@ -69,7 +69,8 @@ void loop() {
         // Process the data
         Serial.print(gpsDataInstance.FullTimeStamp);
     }else{
-      // Serial.print("no fix");
+
+      Serial.println("no fix");
     }
 
 }

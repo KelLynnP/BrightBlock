@@ -2,31 +2,39 @@
 #define GPSHANDLER_H
 
 #include <Adafruit_GPS.h>
-#include <Arduino.h>#ifndef GPSHANDLER_H
-#define GPSHANDLER_H
-
-#include <Adafruit_GPS.h>
 #include <Arduino.h>
 
 class GPSHandler {
 private:
-    Adafruit_GPS GPS;
     uint32_t GpsTimer;
     const int sampleRateGps = 5000;
+    struct GPSData {
+      char FullTimeStamp[20];
+      char ShortTimeStamp[6];
+      float latitude;
+      float longitude;
+      float altitude;
+      bool dataReceived = false;
+        };
+    GPSData* readGPSData;
 
 public:
-    struct GPSData {
-        char FullTimeStamp[20];
-        char ShortTimeStamp[6];
-        float latitude;
-        float longitude;
-        float altitude;
-        bool dataReceived = false;
-    };
+    Adafruit_GPS GPS;
 
+    
     GPSHandler(HardwareSerial& serial);
+    ~GPSHandler(); // Destructor :,)
+
     void setup();
-    GPSData readAndStoreGPS();
+    void readAndStoreGPS();
+
+    // public access functions 
+    const char* FullTimeStamp() const {return readGPSData->FullTimeStamp;}
+    const char* ShortTimeStamp() const {return readGPSData->ShortTimeStamp;}
+    float getLatitude() const { return readGPSData->latitude; }
+    float getLongitude() const { return readGPSData->longitude; }
+    float getAltitude() const { return readGPSData->altitude; }
+
 };
 
 #endif // GPSHANDLER_H

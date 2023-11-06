@@ -1,3 +1,5 @@
+#include <Adafruit_NeoPixel.h>
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
