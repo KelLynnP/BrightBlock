@@ -12,14 +12,14 @@
  GPSHandler gpsHandler(Serial1);
  Sen55Handler sen55Handler;
 
-// ButtonSet
+// // ButtonSet
  Button* logEventButton;
  uint8_t logEventButtonPin = 13;
 
  Button* stateButton;
  uint8_t stateButtonPin = 26;
 
-// Led Vibes 
+// // Led Vibes 
  int brightHigh = 30;
  int brightLow = 5;
  int timeDelayMS = 1000; 
@@ -28,30 +28,30 @@
 
 void setup() {
     Serial.begin(115200);
-    gpsHandler.setup();
+    // gpsHandler.setup();
     sen55Handler.setup();
-
-
+    
     logEventButton = new Button();
     logEventButton->setup(logEventButtonPin, []{ logEventButton->handleInterrupt(); }, RISING);
 
     stateButton = new Button();
     stateButton->setup(stateButtonPin, []{ stateButton->handleInterrupt(); }, RISING);
-}
+  }
 
 void loop() {
   StatusLED.ledSet(brightHigh, brightLow, timeDelayMS); 
   gpsHandler.readAndStoreGPS();
 
-
   static uint32_t lastMillis = 0;
 
   if (millis() - lastMillis > 5000UL) {  // Check every 5 seconds
-    
+    // sen55Handler.pullData();
     Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", logEventButton->getCount());
     Serial.printf("State Button: %d times in the last [in 5 seconds]\n", stateButton->getCount());
-    Serial.printf("Gps Data: %2.2f latitude \n", gpsHandler.getLatitude());
-    Serial.printf("Sen Data: %2.2f latitude \n", sen55Handler.getPm2p5());
+    // Serial.printf("Gps Data: %2.2f latitude \n", gpsHandler.getLatitude());
+    if (sen55Handler.pullData()){
+      Serial.printf("Sen Data: %2.2f PM2.5 \n", sen55Handler.getPm2p5());
+      }
     lastMillis = millis();
   }
 }

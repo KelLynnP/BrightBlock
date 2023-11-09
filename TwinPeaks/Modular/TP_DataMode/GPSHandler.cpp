@@ -2,6 +2,7 @@
 
 GPSHandler::GPSHandler(HardwareSerial& serial) : GPS(&serial), GpsTimer(millis()) {
     readGPSData = nullptr;  // Initialize the pointer to nullptr, just to be safe.
+    // readGPSData->
 }
 
 GPSHandler::~GPSHandler() {

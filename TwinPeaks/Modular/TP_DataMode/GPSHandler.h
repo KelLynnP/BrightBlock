@@ -31,7 +31,7 @@ public:
     // public access functions 
     const char* FullTimeStamp() const {return readGPSData->FullTimeStamp;}
     const char* ShortTimeStamp() const {return readGPSData->ShortTimeStamp;}
-    float getLatitude() const { return readGPSData->latitude; }
+    float getLatitude() const {return readGPSData->latitude; }
     float getLongitude() const { return readGPSData->longitude; }
     float getAltitude() const { return readGPSData->altitude; }
 
