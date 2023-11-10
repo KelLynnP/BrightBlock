@@ -1,6 +1,5 @@
 #include "MemoryCardHandler.h"
 
-
 int MemoryCardHandler::PullLastEventIndex(fs::FS& fs, const char* path) {  //FiXme: this calls other helper functions nested inside, i am okay with it because it helps declutter the already cluttered code below.
   Serial.println("Starting PullLastEventIndex ");
 
@@ -23,9 +22,7 @@ int MemoryCardHandler::PullLastEventIndex(fs::FS& fs, const char* path) {  //FiX
   Serial.println(numLinePlusOne.c_str());
   file.close();
   appendFile(fs, path, numLinePlusOne.c_str());
-
   return numLine;
-  // return 0;
 }
 
 void  MemoryCardHandler::writeFile(fs::FS& fs, const char* path, const char* message) {

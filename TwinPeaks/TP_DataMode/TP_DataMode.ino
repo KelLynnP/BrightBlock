@@ -356,7 +356,6 @@ void appendFile(fs::FS& fs, const char* path, const char* message) {
 
   // State machine + UI ( Pin mode + button )
   StateMachine machine = StateMachine();
-
   State* idle = machine.addState(&idleState);  // starting state~
   State* dataTaking = machine.addState(&dataTakingState);
   // State* dataDump = machine.addState(&dataDumpState);
@@ -612,7 +611,8 @@ void setup() {
 
   // set transtiions
   idle->addTransition(&transitionidle2dataTaking, dataTaking);
-  dataTaking->addTransition(&transitiondataTaking2idle, idle);  // transitions return the state they are heading to?
+  dataTaking->addTransition(&transitiondataTaking2idle, idle);  
+  
   // dataDumpMode->addTransition(&transition,S4);
 
   // enable UI components
@@ -642,8 +642,9 @@ void loop() {
 
 void idleState() {
   Serial.printf("Idle State ! Nothing 2 c here :) \n");
-  // Serial.printf("Just waiting until the state button is pressed to change:  %d \n", stateButton->getCount());
   StatusLED.ledSet(0, 0, timeDelayMS);
+
+  // Serial.printf("Just waiting until the state button is pressed to change:  %d \n", stateButton->getCount());
 
 //   GPSData DummyGPSData = readAndStoreGPS();  // Hello GPS are you there
 //   if (DummyGPSData.dataReceived == true) {   // Essential GPS Logic!

@@ -13,7 +13,7 @@ class DataTranscription {
 private:
 
 public:
-    std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit, const Sen55& Sen55Data);
+    // std::vector<std::string> PullAndTranscribeData(const GPSData& GPSData2Transmit, const Sen55& Sen55Data);
     std::string FormatAndAppendTimestamp(float RawData, const char* TimeSnip);
 };
 

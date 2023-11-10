@@ -1,7 +1,13 @@
-// #include "DataTranscription.h"
-// #include "GPSHandler.h"
-// #include "Sen55Handler.h"
-// #include "Button.h"
+#include "DataTranscription.h"
+
+std::string DataTranscription::FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
+  char Data[15];
+  // Serial.println(RawData);
+  sprintf(Data, ",%f", RawData);
+  std::string str = std::string(TimeSnip) + Data;
+  // Serial.print(str.c_str());
+  return str;
+}
 
 // std::vector<std::string> DataTranscription::PullAndTranscribeData(GPSData& GPSData2Transmit,Sen55& Sen55Data, int buttonCounts ) {
 //   std::vector<std::string> sensorDataVector(NumCharacteristics);
@@ -27,11 +33,3 @@
 //   return sensorDataVector;
 // }
 // // maybe types here will cause errors!
-// std::string DataTranscription::FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
-//   char Data[15];
-//   // Serial.println(RawData);
-//   sprintf(Data, ",%f", RawData);
-//   std::string str = std::string(TimeSnip) + Data;
-//   Serial.println(str.c_str());
-//   return str;
-// }
