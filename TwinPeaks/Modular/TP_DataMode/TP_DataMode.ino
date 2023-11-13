@@ -65,6 +65,31 @@ void idleState() {
   StatusLED.ledSet(0, 0, timeDelayMS);
 }
 
+std::vector<std::string> PullAndTranscribeData() {
+    std::vector<std::string> sensorDataVector(10);
+    
+    sen55Handler.pullData();
+
+    //GPS Data
+    sensorDataVector[0] = gpsHandler.getFullTimeStamp();
+    sensorDataVector[1] = makeString(gpsHandler.getLatitude() ,6);
+    sensorDataVector[2] = makeString(gpsHandler.getLongitude(), 6);
+    sensorDataVector[3] = makeString(gpsHandler.getAltitude(), 6);
+
+    // SEN55 Data
+    sensorDataVector[4] = makeString(sen55Handler.getPm2p5(), 6);
+    sensorDataVector[5] = makeString(sen55Handler.getAmbientHumidity(), 6);
+    sensorDataVector[6] = makeString(sen55Handler.getAmbientTemperature(), 6);
+    sensorDataVector[7] = makeString(sen55Handler.getVocIndex(), 6);
+    sensorDataVector[8] = makeString(sen55Handler.getNoxIndex(), 6);
+    
+    // Log Button Data
+    sensorDataVector[9] = makeString(logEventButton->getCount(), 6); 
+    logEventButton->resetCount();
+
+    return sensorDataVector;
+}
+
 void dataTakingState() {
   // Serial.printf("Data time!  \n");
   StatusLED.ledSet(brightHigh, brightLow, timeDelayMS);
@@ -72,14 +97,20 @@ void dataTakingState() {
   static uint32_t lastMillis = 0;
 
   if (millis() - lastMillis > 5000UL) {  // Check every 5 seconds
-    Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", logEventButton->getCount());
-    logEventButton->resetCount();
-    // std::string latitude = makeString(gpsHandler.getLatitude(), 6);
+    // Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", logEventButton->getCount());
+    // logEventButton->resetCount();
+    // // std::string latitude = makeString(gpsHandler.getLatitude(), 6);
+    std::vector<std::string> dataString = PullAndTranscribeData();
+    // Serial.printf("hello");
 
+    for (int i = 0; i < 10; i++) {
+      // Serial.print(i);
+      Serial.println(dataString[i].c_str());
+    }
 
-    if (sen55Handler.pullData()){
-      Serial.printf("Sen Data: %2.2f PM2.5 \n", sen55Handler.getPm2p5());
-      }
+    // if (sen55Handler.pullData()){
+    //   Serial.printf("Sen Data: %2.2f PM2.5 \n", sen55Handler.getPm2p5());
+    //   }
     lastMillis = millis();
   }
 }
@@ -105,28 +136,6 @@ bool transitionIdle2dataTaking() {
 
 }
 
-std::vector<std::string> PullAndTranscribeData() {
-    std::vector<std::string> sensorDataVector(10);
-
-    //GPS Data
-    sensorDataVector[0] = gpsHandler.getFullTimeStamp();
-    sensorDataVector[1] = makeString(gpsHandler.getLatitude() ,6);
-    sensorDataVector[2] = makeString(gpsHandler.getLongitude(), 6);
-    sensorDataVector[3] = makeString(gpsHandler.getAltitude(), 6);
-
-    // SEN55 Data
-    sensorDataVector[4] = makeString(sen55Handler.getPm2p5(), 6);
-    sensorDataVector[5] = makeString(sen55Handler.getAmbientHumidity(), 6);
-    sensorDataVector[6] = makeString(sen55Handler.getAmbientTemperature(), 6);
-    sensorDataVector[7] = makeString(sen55Handler.getVocIndex(), 6);
-    sensorDataVector[8] = makeString(sen55Handler.getNoxIndex(), 6);
-    
-    // Log Button Data
-    sensorDataVector[9] = makeString(logEventButton->getCount(), 6); 
-    logEventButton->resetCount();
-
-    return sensorDataVector;
-}
 
 
 void testByPrint(){
