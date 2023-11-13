@@ -20,8 +20,6 @@ private:
 
 public:
     Adafruit_GPS GPS;
-
-    
     GPSHandler(HardwareSerial& serial);
     ~GPSHandler(); // Destructor :,)
 
@@ -29,8 +27,8 @@ public:
     void readAndStoreGPS();
 
     // public access functions 
-    const char* FullTimeStamp() const {return readGPSData->FullTimeStamp;}
-    const char* ShortTimeStamp() const {return readGPSData->ShortTimeStamp;}
+    const char* getFullTimeStamp() const {return readGPSData->FullTimeStamp;}
+    const char* getShortTimeStamp() const {return readGPSData->ShortTimeStamp;}
     float getLatitude() const {return readGPSData->latitude; }
     float getLongitude() const { return readGPSData->longitude; }
     float getAltitude() const { return readGPSData->altitude; }

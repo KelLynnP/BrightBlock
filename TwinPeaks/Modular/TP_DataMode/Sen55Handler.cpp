@@ -41,6 +41,15 @@ float Sen55Handler::getAmbientTemperature() const {
     return data.ambientTemperature;
 }
 
+float Sen55Handler::getVocIndex() const {
+    return data.vocIndex;
+}
+
+float Sen55Handler::getNoxIndex() const {
+    return data.noxIndex;
+}
+
+
 void Sen55Handler::printError(uint16_t error) {
     Serial.print("Error trying to execute readMeasuredValues(): ");
     errorToString(error, errorMessage, 256);

@@ -12,6 +12,8 @@ public:
     float getPm2p5() const;
     float getAmbientHumidity() const;
     float getAmbientTemperature() const;
+    float getVocIndex() const;
+    float getNoxIndex() const;
 
 private:
     SensirionI2CSen5x sen5x;

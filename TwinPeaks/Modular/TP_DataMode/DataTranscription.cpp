@@ -2,10 +2,8 @@
 
 std::string DataTranscription::FormatAndAppendTimestamp(float RawData, const char* TimeSnip) {
   char Data[15];
-  // Serial.println(RawData);
   sprintf(Data, ",%f", RawData);
   std::string str = std::string(TimeSnip) + Data;
-  // Serial.print(str.c_str());
   return str;
 }
 

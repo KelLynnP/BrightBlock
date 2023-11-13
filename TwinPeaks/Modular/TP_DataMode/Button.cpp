@@ -19,5 +19,5 @@ uint32_t Button::getCount() {
 }
 
 void Button::resetCount() {
-  countNumKeyPresses = 0;
+  countNumKeyPresses=0;
 }
