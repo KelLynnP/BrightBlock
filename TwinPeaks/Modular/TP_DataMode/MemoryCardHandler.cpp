@@ -1,9 +1,46 @@
 #include "MemoryCardHandler.h"
+#include "FS.h"  // Memory Card files
+#include "SD.h"
+#include "SPI.h"
 
-int MemoryCardHandler::PullLastEventIndex(fs::FS& fs, const char* path) {  //FiXme: this calls other helper functions nested inside, i am okay with it because it helps declutter the already cluttered code below.
+void MemoryCardHandler::setup() {
+    if (!SD.begin(memoryCardPin)) {
+        Serial.println("Card Mount Failed");
+        return;
+    }
+  uint8_t cardType = SD.cardType();
+
+  if (cardType == CARD_NONE) {
+    Serial.println("No SD card attached");
+    return;
+  }
+
+  Serial.print("SD Card Type: ");
+  if (cardType == CARD_MMC) {
+    Serial.println("MMC");
+  } else if (cardType == CARD_SD) {
+    Serial.println("SDSC");
+  } else if (cardType == CARD_SDHC) {
+    Serial.println("SDHC");
+  } else {
+    Serial.println("UNKNOWN");
+  }
+  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+}
+
+void MemoryCardHandler::setNewDataEvent(){
+   int eventCounter = PullLastEventIndex();
+    sprintf(NewFilePath, "/Event%d.txt", eventCounter);  // Fixed format string
+    Serial.print("New data file created");
+    Serial.println(NewFilePath);
+    String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, vocIndex, noxIndex, ButtonPress";
+    writeFile(NewFilePath, Header.c_str());  // Added missing 
+}
+int MemoryCardHandler::PullLastEventIndex() { 
+   
+  // const char* path = eventIndexPath;
   Serial.println("Starting PullLastEventIndex ");
-
-  File file = fs.open(path, FILE_READ);
+  File file = SD.open(MemoryCardHandler::eventIndexPath, FILE_READ);
   String line;
   if (!file) {
     Serial.println("Failed to open file for appending");
@@ -13,22 +50,32 @@ int MemoryCardHandler::PullLastEventIndex(fs::FS& fs, const char* path) {  //FiX
   while (file.available()) {
     line = file.readStringUntil(',');
     Serial.println(line);
-  }
+    Serial.println("here is our last 'line' output <3 53");
 
-  int numLine = std::stoi(line.c_str());
-  Serial.printf("Appending to file: %s\n", path);
+  }
+  Serial.println("line 54");
+  int numLine = 0;
+  try {
+      numLine = std::stoi(line.c_str());
+  } catch (const std::exception& e) {
+      Serial.println("Error converting string to integer");
+      Serial.println(e.what());
+  }
+  // int numLine = std::stoi(line.c_str());
+  Serial.println("line 57");
+  Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
   std::string numLinePlusOne = std::to_string(numLine + 1);
   numLinePlusOne += ',';
   Serial.println(numLinePlusOne.c_str());
   file.close();
-  appendFile(fs, path, numLinePlusOne.c_str());
+  appendFile(MemoryCardHandler::eventIndexPath, numLinePlusOne.c_str());
   return numLine;
 }
 
-void  MemoryCardHandler::writeFile(fs::FS& fs, const char* path, const char* message) {
+void  MemoryCardHandler::writeFile(const char* path, const char* message) {
   Serial.printf("Writing file: %s\n", path);
 
-  File file = fs.open(path, FILE_WRITE);
+  File file = SD.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
     return;
@@ -41,10 +88,10 @@ void  MemoryCardHandler::writeFile(fs::FS& fs, const char* path, const char* mes
   file.close();
 }
 
-void  MemoryCardHandler::appendFile(fs::FS& fs, const char* path, const char* message) {
+void  MemoryCardHandler::appendFile(const char* path, const char* message) {
   Serial.printf("Appending to file: %s\n", path);
 
-  File file = fs.open(path, FILE_APPEND);
+  File file = SD.open(path, FILE_APPEND);
   if (!file) {
     Serial.println("Failed to open file for appending");
     return;
@@ -56,3 +103,4 @@ void  MemoryCardHandler::appendFile(fs::FS& fs, const char* path, const char* me
   }
   file.close();
 }
+

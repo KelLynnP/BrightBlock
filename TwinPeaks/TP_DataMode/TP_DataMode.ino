@@ -612,7 +612,7 @@ void setup() {
   // set transtiions
   idle->addTransition(&transitionidle2dataTaking, dataTaking);
   dataTaking->addTransition(&transitiondataTaking2idle, idle);  
-  
+
   // dataDumpMode->addTransition(&transition,S4);
 
   // enable UI components
