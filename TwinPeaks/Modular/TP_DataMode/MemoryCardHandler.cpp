@@ -34,11 +34,10 @@ void MemoryCardHandler::setNewDataEvent(){
     Serial.print("New data file created");
     Serial.println(NewFilePath);
     String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, vocIndex, noxIndex, ButtonPress";
-    writeFile(NewFilePath, Header.c_str());  // Added missing 
+    writeFile(NewFilePath, Header.c_str());  
 }
+
 int MemoryCardHandler::PullLastEventIndex() { 
-   
-  // const char* path = eventIndexPath;
   Serial.println("Starting PullLastEventIndex ");
   File file = SD.open(MemoryCardHandler::eventIndexPath, FILE_READ);
   String line;
@@ -50,10 +49,7 @@ int MemoryCardHandler::PullLastEventIndex() {
   while (file.available()) {
     line = file.readStringUntil(',');
     Serial.println(line);
-    Serial.println("here is our last 'line' output <3 53");
-
   }
-  Serial.println("line 54");
   int numLine = 0;
   try {
       numLine = std::stoi(line.c_str());
@@ -61,8 +57,6 @@ int MemoryCardHandler::PullLastEventIndex() {
       Serial.println("Error converting string to integer");
       Serial.println(e.what());
   }
-  // int numLine = std::stoi(line.c_str());
-  Serial.println("line 57");
   Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
   std::string numLinePlusOne = std::to_string(numLine + 1);
   numLinePlusOne += ',';
@@ -102,5 +96,9 @@ void  MemoryCardHandler::appendFile(const char* path, const char* message) {
     Serial.println("Append failed");
   }
   file.close();
+}
+
+void MemoryCardHandler::logRowData(const char* message){
+  appendFile(NewFilePath, message);  // Corrected the function name to appendFile and added missing ".c_str()"
 }
 

@@ -102,10 +102,16 @@ void dataTakingState() {
 
   if (millis() - lastMillis > 5000UL) {  // Check every 5 seconds
     std::vector<std::string> dataString = PullAndTranscribeData();
+    std::string Row_Data;
 
     for (int i = 0; i < 10; i++) {
-      Serial.println(dataString[i].c_str());
+      Row_Data += dataString[i].c_str();
+      Row_Data += ',';
     }
+    Serial.println(Row_Data.c_str());
+
+    Row_Data += '\n';
+    memoryCard.logRowData(Row_Data.c_str()); // 
 
     lastMillis = millis();
   }
@@ -132,7 +138,6 @@ bool transitionIdle2dataTaking() {
   return false;
 
 }
-
 
 
 void testByPrint(){
