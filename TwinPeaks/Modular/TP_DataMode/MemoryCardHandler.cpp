@@ -33,7 +33,7 @@ void MemoryCardHandler::setNewDataEvent(){
     sprintf(NewFilePath, "/Event%d.txt", eventCounter);  // Fixed format string
     Serial.print("New data file created");
     Serial.println(NewFilePath);
-    String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, vocIndex, noxIndex, ButtonPress";
+    String Header = "TimeStamp, Latitude, Longitude, Altitude, PM25, RelativeHumidity, Temperature, vocIndex, noxIndex, ButtonPress, PressurehPa";
     writeFile(NewFilePath, Header.c_str());  
 }
 

@@ -7,8 +7,10 @@
 #include "StateMachine.h"
 #include "LPS2.h"
 
+// user Set configurations 
 uint8_t SampleRate = 5000;
 int DataLen = 11; 
+
 // Object handlers
 LPS2 lpsHandler;
 GPSHandler gpsHandler(Serial1);
@@ -36,26 +38,30 @@ std::string makeString(float RawData, int length) {
 }
 
 std::vector<std::string> PullAndTranscribeData() {
-    std::vector<std::string> sensorDataVector(10);
-    
-    sen55Handler.pullData();
+  std::vector<std::string> sensorDataVector(DataLen);
+  
+  sen55Handler.pullData();
+  lpsHandler.pullData();
 
-    //GPS Data
-    sensorDataVector[0] = gpsHandler.getFullTimeStamp();
-    sensorDataVector[1] = makeString(gpsHandler.getLatitude() ,6);
-    sensorDataVector[2] = makeString(gpsHandler.getLongitude(), 6);
-    sensorDataVector[3] = makeString(gpsHandler.getAltitude(), 6);
+  //GPS Data
+  sensorDataVector[0] = gpsHandler.getFullTimeStamp();
+  sensorDataVector[1] = makeString(gpsHandler.getLatitude(), 10);
+  sensorDataVector[2] = makeString(gpsHandler.getLongitude(), 10);
+  sensorDataVector[3] = makeString(gpsHandler.getAltitude(), 6);
 
-    // SEN55 Data
-    sensorDataVector[4] = makeString(sen55Handler.getPm2p5(), 6);
-    sensorDataVector[5] = makeString(sen55Handler.getAmbientHumidity(), 6);
-    sensorDataVector[6] = makeString(sen55Handler.getAmbientTemperature(), 6);
-    sensorDataVector[7] = makeString(sen55Handler.getVocIndex(), 6);
-    sensorDataVector[8] = makeString(sen55Handler.getNoxIndex(), 6);
-    
-    // Log Button Data
-    sensorDataVector[9] = makeString(logEventButton->getCount(), 6); 
-    logEventButton->resetCount();
+  // SEN55 Data
+  sensorDataVector[4] = makeString(sen55Handler.getPm2p5(), 6);
+  sensorDataVector[5] = makeString(sen55Handler.getAmbientHumidity(), 6);
+  sensorDataVector[6] = makeString(sen55Handler.getAmbientTemperature(), 6);
+  sensorDataVector[7] = makeString(sen55Handler.getVocIndex(), 6);
+  sensorDataVector[8] = makeString(sen55Handler.getNoxIndex(), 6);
+  
+  // Log Button Data
+  sensorDataVector[9] = makeString(logEventButton->getCount(), 6); 
+  logEventButton->resetCount();
+  
+  // Pressure Sensor
+  sensorDataVector[10] = makeString(lpsHandler.getPressureHPa(), 6); 
 
   return sensorDataVector;
 }
@@ -87,8 +93,8 @@ void setup() {
 }
 
 void loop() {
-  //  machine.run();
-  testByPrint();
+  machine.run();
+  // testByPrint();
 }
 
 // State machine functions
