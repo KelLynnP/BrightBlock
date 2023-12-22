@@ -17,6 +17,7 @@ private:
 
     
 public:
+    bool printOut = false;
     int memoryCardPin = 4;
     int PullLastEventIndex();
     void setNewDataEvent();

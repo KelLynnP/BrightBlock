@@ -57,10 +57,13 @@ int MemoryCardHandler::PullLastEventIndex() {
       Serial.println("Error converting string to integer");
       Serial.println(e.what());
   }
-  Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
+
   std::string numLinePlusOne = std::to_string(numLine + 1);
   numLinePlusOne += ',';
-  Serial.println(numLinePlusOne.c_str());
+   if (printOut){
+    Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
+    Serial.println(numLinePlusOne.c_str());
+   }
   file.close();
   appendFile(MemoryCardHandler::eventIndexPath, numLinePlusOne.c_str());
   return numLine;
@@ -83,16 +86,19 @@ void  MemoryCardHandler::writeFile(const char* path, const char* message) {
 }
 
 void  MemoryCardHandler::appendFile(const char* path, const char* message) {
-  Serial.printf("Appending to file: %s\n", path);
+  if (printOut){
+    Serial.printf("Appending to file: %s\n", path);
+  }
+
 
   File file = SD.open(path, FILE_APPEND);
   if (!file) {
     Serial.println("Failed to open file for appending");
     return;
   }
-  if (file.print(message)) {
+  if (file.print(message) & (printOut)){
     Serial.println("Message appended");
-  } else {
+  } if  (!file.print(message)){
     Serial.println("Append failed");
   }
   file.close();

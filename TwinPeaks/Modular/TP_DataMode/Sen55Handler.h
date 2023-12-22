@@ -10,6 +10,7 @@ public:
     void setup();
     bool pullData();
     float getPm2p5() const;
+    float getPm10p5() const;
     float getAmbientHumidity() const;
     float getAmbientTemperature() const;
     float getVocIndex() const;

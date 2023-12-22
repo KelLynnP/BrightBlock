@@ -200,7 +200,7 @@ void setup(){
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
 
-    writeFile(SD, "/eventIndex.txt", "0, ");
+    // writeFile(SD, "/eventIndex.txt", "0, ");
     readFile(SD, "/eventIndex.txt");
 
     Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));

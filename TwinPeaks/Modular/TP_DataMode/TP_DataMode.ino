@@ -8,7 +8,7 @@
 #include "LPS2.h"
 
 // user Set configurations 
-uint8_t SampleRate = 5000;
+uint8_t SampleRate = 1500;
 int DataLen = 11; 
 
 // Object handlers
@@ -25,7 +25,7 @@ Button* stateButton;
 uint8_t stateButtonPin = 26;
 
 // Led Vibes 
-int brightHigh = 30;
+int brightHigh = 50;
 int brightLow = 5;
 int timeDelayMS = 1000; 
 
@@ -51,9 +51,13 @@ std::vector<std::string> PullAndTranscribeData() {
 
   // SEN55 Data
   sensorDataVector[4] = makeString(sen55Handler.getPm2p5(), 6);
+  
+  
   sensorDataVector[5] = makeString(sen55Handler.getAmbientHumidity(), 6);
   sensorDataVector[6] = makeString(sen55Handler.getAmbientTemperature(), 6);
   sensorDataVector[7] = makeString(sen55Handler.getVocIndex(), 6);
+  // Serial.println(sen55Handler.getVocIndex());
+
   sensorDataVector[8] = makeString(sen55Handler.getNoxIndex(), 6);
   
   // Log Button Data
@@ -108,7 +112,7 @@ void dataTakingState() {
   gpsHandler.readAndStoreGPS();
   static uint32_t lastMillis = 0;
 
-  if (millis() - lastMillis > 5000UL) {  // Check every 5 seconds
+  if (millis() - lastMillis > SampleRate) {  // Check every 5 seconds
     std::vector<std::string> dataString = PullAndTranscribeData();
     std::string Row_Data;
 
@@ -118,7 +122,7 @@ void dataTakingState() {
         Row_Data += ',';
       }
     }
-    Serial.println(Row_Data.c_str());
+    // Serial.println(Row_Data.c_str());
     Row_Data += '\n';
     memoryCard.logRowData(Row_Data.c_str()); // 
 
