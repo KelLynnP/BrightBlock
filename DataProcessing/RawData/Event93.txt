@@ -1,0 +1,2 @@
+TimeStamp,Latitude,Longitude,Altitude,PM25,RelativeHumidity,Temperature,vocIndex,noxIndex,ButtonPress,PressurehPa
+16:01:44 08/02/0024,37.768936,-122.49301,54.000,2.6000,89.629,4.7150,103.00,1.0000,0.0000,1012.2

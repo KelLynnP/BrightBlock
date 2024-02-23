@@ -114,7 +114,6 @@ void dataTakingState() {
 
  
   if (millis() - Event.lastMillis > sampleRate) {  // Check every 5 seconds
-
     // Serial.printf("Checking Sample Rate : %lu %\n", millis() );
 
     std::vector<std::string> dataString = PullAndTranscribeData();
@@ -173,8 +172,9 @@ void testByPrint(){
 
     Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", logEventButton->getCount());
 
-    // logEventButton->resetCount();
-    // Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", logEventButton->getCount());
+    Serial.printf("Log Button: %d times in the last [in 5 seconds]\n", stateButton->getCount());
+    logEventButton->resetCount();
+    stateButton->resetCount();
 
     // Serial.printf("Gps Data: %2.2f latitude \n", gpsHandler.getLatitude());
     // if (sen55Handler.pullData()){

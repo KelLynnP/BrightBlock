@@ -90,7 +90,6 @@ void  MemoryCardHandler::appendFile(const char* path, const char* message) {
     Serial.printf("Appending to file: %s\n", path);
   }
 
-
   File file = SD.open(path, FILE_APPEND);
   if (!file) {
     Serial.println("Failed to open file for appending");
@@ -98,7 +97,7 @@ void  MemoryCardHandler::appendFile(const char* path, const char* message) {
   }
   if (file.print(message) & (printOut)){
     Serial.println("Message appended");
-  } if  (!file.print(message)){
+  } else if (printOut) {
     Serial.println("Append failed");
   }
   file.close();
