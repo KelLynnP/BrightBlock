@@ -27,6 +27,8 @@ Button* stateButton;
 uint8_t stateButtonPin = 26;
 
 // Led Vibes 
+int ledPin = 25;
+int ledChannel = 0; 
 int brightHigh = 50;
 int brightLow = 5;
 int timeDelayMS = 1000; 
@@ -72,7 +74,7 @@ std::vector<std::string> PullAndTranscribeData() {
   return sensorDataVector;
 }
 
-LED StatusLED(25,0); // Create an instance of the LED class at pin 25 with channel 0
+LED StatusLED(ledPin,ledChannel); // Create an instance of the LED class at pin 25 with channel 0
 
 // State Machine Logic
 StateMachine machine = StateMachine();
