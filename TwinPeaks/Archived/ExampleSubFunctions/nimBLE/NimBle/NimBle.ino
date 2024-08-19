@@ -86,11 +86,19 @@ void setup() {
 void loop() {
 
   std::string DummyTimestamp = "04:32:27 13/06/0023";
+  std::string timeStamp = " ";
 
   for(int i=0; i<NumCharacteristics; i++) {
-    pCharacteristicChars[i]->setValue(DummyTimestamp);
+    if (i  == 0 ){
+   pCharacteristicChars[i]->setValue(DummyTimestamp);
     pCharacteristicChars[i]->notify();
-    delay(500);
+    delay(500); 
+    }else{
+    pCharacteristicChars[i]->setValue(char(i));
+    pCharacteristicChars[i]->notify();
+    delay(500); 
+    }
+
   }
 
   if (!deviceConnected && oldDeviceConnected) {
