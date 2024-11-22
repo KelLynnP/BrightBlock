@@ -1,2 +1,12 @@
+curl https://api.anthropic.com/v1/messages -H "Content-Type: application/json" --header "x-api-key: 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" --header "anthropic-version: 2023-06-01" -d '{
+		"model": "claude-3-opus-20240229",
+    "max_tokens": 1024,
+		"messages": [
+			{
+				"role": "user",
+				"content": "Testing. Just say hi and nothing else."
+			}
+		]
+	}'
 TimeStamp,Latitude,Longitude,Altitude,PM25,RelativeHumidity,Temperature,vocIndex,noxIndex,ButtonPress,PressurehPa
 16:01:44 08/02/0024,37.768936,-122.49301,54.000,2.6000,89.629,4.7150,103.00,1.0000,0.0000,1012.2

@@ -49,7 +49,7 @@ std::vector<std::string> PullAndTranscribeData() {
 
   //GPS Data
   sensorDataVector[0] = gpsHandler.getFullTimeStamp();
-  sensorDataVector[1] = makeString(gpsHandler.getLatitude(), 10);
+  sensorDataVector[1] = makeString(gps.getLatitude(), 10);
   sensorDataVector[2] = makeString(gpsHandler.getLongitude(), 10);
   sensorDataVector[3] = makeString(gpsHandler.getAltitude(), 6);
 
