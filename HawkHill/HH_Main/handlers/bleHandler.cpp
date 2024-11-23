@@ -13,15 +13,11 @@ void MyServerCallbacks::onDisconnect(NimBLEServer* pServer) {
 uint32_t NimBLEHandler::getProperties(CharType type) const {
     switch (type) {
         case CharType::READ:
-            return NIMBLE_PROPERTY::READ;
-        case CharType::NOTIFY:
             return NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY;
         case CharType::WRITE:
-            return NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE;
-        case CharType::WRITE_ONLY:
-            return NIMBLE_PROPERTY::WRITE;
+            return NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY;
         default:
-            return NIMBLE_PROPERTY::READ;
+            return NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY;
     }
 }
 
@@ -63,7 +59,7 @@ void NimBLEHandler::setupBLE(const std::string& deviceName) {
         pCharacteristics[i]->createDescriptor("2901", 
             NIMBLE_PROPERTY::READ)->setValue(def.label);
         
-        if (def.type == CharType::WRITE || def.type == CharType::READ_WRITE_NOTIFY) {
+        if (def.type == CharType::WRITE) {
             pCharacteristics[i]->setCallbacks(pCharCallbacks);
         }
     }
@@ -98,9 +94,7 @@ void NimBLEHandler::updateCharacteristic(const char* label, const std::string& v
         if (strcmp(characteristicDefs[i].label, label) == 0) {
             if (pCharacteristics[i]) {
                 pCharacteristics[i]->setValue(value);
-                if (characteristicDefs[i].type == CharType::NOTIFY) {
-                    pCharacteristics[i]->notify();
-                }
+                pCharacteristics[i]->notify();
                 Serial.printf("Updated %s: %s\n", label, value.c_str());
             }
             break;

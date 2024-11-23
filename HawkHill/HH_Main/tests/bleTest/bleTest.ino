@@ -6,7 +6,7 @@
 struct SensorData {
     // Write characteristics (from client)
     const char* modeType = "0";        // Client writes this
-    const char* errorString = "";      // Client writes this
+    const char* errorString = ":)";      // Client writes this
     
     // Notify characteristics (to client)
     const char* timeStamp = "12:34:56";
@@ -17,7 +17,7 @@ struct SensorData {
     const char* pm25 = "12.3";
     const char* temperature = "25.6";
     const char* nearMissEvent = "0";
-    const char* modeButtonEvent = "1";
+    const char* modeButtonEvent = "0";
     const char* batteryLevel = "85";
 } testData;
 
@@ -56,7 +56,7 @@ void loop() {
             // Send individual sensor updates
             sendSensorData(); // General non BLE specific helper function
             // Send same data in bulk format
-            sendBulkData(); // General non BLE specific helper function
+            // sendBulkData(); // General non BLE specific helper function
         }
         lastUpdate = currentMillis;
     }
@@ -72,7 +72,13 @@ void sendSensorData() {
     bleHandler.updateCharacteristic("Longitude", testData.longitude);
     bleHandler.updateCharacteristic("Altitude", testData.altitude);
     bleHandler.updateCharacteristic("GPSFix", testData.gpsFix);
-    // ... other sensor updates ...
+    bleHandler.updateCharacteristic("PM25", testData.pm25);
+    bleHandler.updateCharacteristic("Temperature", testData.temperature);
+    bleHandler.updateCharacteristic("NearMissEvent", testData.nearMissEvent);
+    bleHandler.updateCharacteristic("ModeButtonEvent", testData.modeButtonEvent);
+    bleHandler.updateCharacteristic("BatteryLevel", testData.batteryLevel);
+    bleHandler.updateCharacteristic("ModeType", testData.modeType);
+    bleHandler.updateCharacteristic("ErrorString", testData.errorString);
 }
 
 void sendBulkData() {
