@@ -135,3 +135,51 @@ void NimBLEHandler::onCharacteristicWrite(const char* label, const std::string& 
     }
 }
 
+void NimBLEHandler::transmitBulkData(const std::string& jsonData) {
+    updateCharacteristic("ErrorString", STATUS_TRANSMITTING);
+    
+    size_t dataLength = jsonData.length();
+    size_t offset = 0;
+    const size_t MAX_BLE_PACKET_SIZE = 128;  // Further reduced for reliability
+    
+    Serial.printf("Starting transmission of %d bytes\n", dataLength);
+    
+    while (offset < dataLength) {
+        if (!isConnected()) {
+            Serial.println("Connection lost during transmission!");
+            updateCharacteristic("ErrorString", STATUS_TRANSMISSION_ERROR);
+            return;
+        }
+        
+        size_t chunkSize = std::min(MAX_BLE_PACKET_SIZE, dataLength - offset);
+        
+        // Find a safe breaking point (comma between objects)
+        if (chunkSize < (dataLength - offset) && jsonData[offset + chunkSize - 1] != '}') {
+            // Look backwards for a complete object
+            size_t safePoint = jsonData.rfind("}", offset + chunkSize) - offset;
+            if (safePoint < chunkSize && safePoint > 0) {
+                chunkSize = safePoint + 1;  // Include the closing brace
+            }
+        }
+        
+        std::string chunk = jsonData.substr(offset, chunkSize);
+        
+        Serial.printf("Sending chunk %d/%d (size: %d, offset: %d)\n", 
+                     (offset/MAX_BLE_PACKET_SIZE) + 1,
+                     (dataLength + MAX_BLE_PACKET_SIZE - 1)/MAX_BLE_PACKET_SIZE,
+                     chunkSize,
+                     offset);
+        
+        updateCharacteristic("BulkData", chunk);
+        offset += chunkSize;
+        
+        // More time between chunks
+        delay(300);  // Increased delay further
+    }
+    
+    Serial.println("Transmission complete");
+    updateCharacteristic("ErrorString", STATUS_TRANSMISSION_COMPLETE);
+    delay(300);  // Longer delay before status reset
+    updateCharacteristic("ErrorString", STATUS_NORMAL);
+}
+

@@ -64,6 +64,13 @@ private:
     // Add callback handler
     CharacteristicCallbacks* pCharCallbacks;
     
+    // Add status codes as static members
+    static constexpr const char* STATUS_IDLE = "0";
+    static constexpr const char* STATUS_NORMAL = "1";
+    static constexpr const char* STATUS_TRANSMITTING = "2";
+    static constexpr const char* STATUS_TRANSMISSION_COMPLETE = "3";
+    static constexpr const char* STATUS_TRANSMISSION_ERROR = "4";
+
 public:
     void setupBLE(const std::string& deviceName);
     void handleConnection();
@@ -71,9 +78,7 @@ public:
     
     // Core methods for data transmission
     void updateCharacteristic(const char* label, const std::string& value);
-    void transmitBulkData(const std::string& jsonData) {
-        updateCharacteristic("BulkData", jsonData);
-    }
+    void transmitBulkData(const std::string& jsonData);
     
     // Add method to handle incoming writes
     virtual void onCharacteristicWrite(const char* label, const std::string& value);
