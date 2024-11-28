@@ -1,5 +1,5 @@
-#ifndef INDICATORLED_H
-#define INDICATORLED_H
+#ifndef LED_H
+#define LED_H
 
 #include <Arduino.h>
 #include <driver/ledc.h>
@@ -14,11 +14,11 @@ private:
     uint32_t LEDC_BASE_FREQ; 
     uint32_t lastToggleTime; 
 
-public:
+public: // expose high current LED function vs indicator LED function
     int LedPin;
-    LED(int LedPinAssigned, int ChannelSet);
+    LED(int LedPinAssigned, int ChannelSet); 
     void ledSet(int brightnessHigh, int brightnessLow, int timingInterval);
     void ledcAnalogWrite(uint8_t channel, uint32_t value);
 };
 
-#endif // INDICATORLED_H
+#endif // LED_H
