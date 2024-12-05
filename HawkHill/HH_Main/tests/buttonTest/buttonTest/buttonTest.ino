@@ -5,8 +5,8 @@ Button* logEventButton = new Button();
 Button* modeButton = new Button();
 void setup() {
     Serial.begin(115200);
-    logEventButton->setup(Button::logButtonPin, []{ logEventButton->handleInterrupt(); }, RISING);
-    modeButton->setup(Button::modeButtonPin, []{ modeButton->handleInterrupt(); }, RISING);
+    logEventButton->setup(Button::logButtonPin, []{ logEventButton->handleInterrupt(); }, CHANGE);
+    modeButton->setup(Button::modeButtonPin, []{ modeButton->handleInterrupt(); }, CHANGE);
 }
 
 void loop() {

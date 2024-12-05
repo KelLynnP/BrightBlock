@@ -11,14 +11,17 @@ class Button {
     void resetCount();
     static const uint8_t logButtonPin = 14;
     static const uint8_t modeButtonPin = 21;
-
+    static const uint32_t LONG_PRESS_DURATION = 2000; // ms
 
   private:
-    uint32_t countNumKeyPresses = 0;
+    uint32_t shortPressCount = 0;
+    uint32_t longPressCount = 0;
     unsigned long debounceTime = 250;  // ms
     unsigned long timeSinceLastPress = 0;
     unsigned long rightNowButtonPressTime = 0;
-    bool boolPrint = true;  // Set a default value
+    bool boolPrint = true;  // Default value
+    bool isRisingEdge = false;  // New variable to track edge type
+    bool lastEdge = HIGH;
 };
 
 #endif //BUTTONHANDLER_H
