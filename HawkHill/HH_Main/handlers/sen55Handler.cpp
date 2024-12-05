@@ -3,7 +3,13 @@
 Sen55Handler::Sen55Handler() : data(), errorMessage() {
 }
 
+void Sen55Handler::initializePower() {
+    pinMode(POWER_PIN, OUTPUT);
+    digitalWrite(POWER_PIN, HIGH);
+}
+
 void Sen55Handler::setup() {
+    initializePower();
     Wire.begin();
     sen5x.begin(Wire);
     uint16_t error;

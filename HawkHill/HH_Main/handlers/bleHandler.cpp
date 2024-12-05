@@ -2,12 +2,12 @@
 
 void MyServerCallbacks::onConnect(NimBLEServer* pServer) {
     handler->deviceConnected = true;
-    Serial.println("Device Connected");
+   // Serial.println("Device Connected");
 }
 
 void MyServerCallbacks::onDisconnect(NimBLEServer* pServer) {
     handler->deviceConnected = false;
-    Serial.println("Device Disconnected");
+    // Serial.println("Device Disconnected");
 }
 
 uint32_t NimBLEHandler::getProperties(CharType type) const {
@@ -22,13 +22,13 @@ uint32_t NimBLEHandler::getProperties(CharType type) const {
 }
 
 void NimBLEHandler::setupBLE(const std::string& deviceName) {
-    Serial.println("Initializing BLE...");
+    // Serial.println("Initializing BLE...");
     
     NimBLEDevice::init(deviceName);
     
     pServer = NimBLEDevice::createServer();
     if (!pServer) {
-        Serial.println("Failed to create server!");
+        // Serial.println("Failed to create server!");
         return;
     }
     
@@ -36,7 +36,7 @@ void NimBLEHandler::setupBLE(const std::string& deviceName) {
     
     auto* pService = pServer->createService(SERVICE_UUID);
     if (!pService) {
-        Serial.println("Failed to create service!");
+        // Serial.println("Failed to create service!");
         return;
     }
     
@@ -44,7 +44,7 @@ void NimBLEHandler::setupBLE(const std::string& deviceName) {
     
     for(int i = 0; i < NumCharacteristics; i++) {
         const auto& def = characteristicDefs[i];
-        Serial.printf("Creating characteristic %s\n", def.label);
+        // Serial.printf("Creating characteristic %s\n", def.label);
         
         pCharacteristics[i] = pService->createCharacteristic(
             def.uuid,
@@ -52,7 +52,7 @@ void NimBLEHandler::setupBLE(const std::string& deviceName) {
         );
         
         if (!pCharacteristics[i]) {
-            Serial.printf("Failed to create characteristic %s!\n", def.label);
+            // Serial.printf("Failed to create characteristic %s!\n", def.label);
             return;
         }
         
@@ -71,14 +71,14 @@ void NimBLEHandler::setupBLE(const std::string& deviceName) {
     pAdvertising->setScanResponse(false);
     NimBLEDevice::startAdvertising();
     
-    Serial.println("BLE Setup Complete");
+    // Serial.println("BLE Setup Complete");
 }
 
 void NimBLEHandler::handleConnection() {
     if (!deviceConnected && oldDeviceConnected) {
         delay(500);
         NimBLEDevice::startAdvertising();
-        Serial.println("Start advertising");
+        // Serial.println("Start advertising");
         oldDeviceConnected = deviceConnected;
     }
     
@@ -95,7 +95,7 @@ void NimBLEHandler::updateCharacteristic(const char* label, const std::string& v
             if (pCharacteristics[i]) {
                 pCharacteristics[i]->setValue(value);
                 pCharacteristics[i]->notify();
-                Serial.printf("Updated %s: %s\n", label, value.c_str());
+                // Serial.printf("Updated %s: %s\n", label, value.c_str());
             }
             break;
         }
@@ -109,7 +109,7 @@ void CharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
     for(int i = 0; i < handler->NumCharacteristics; i++) {
         if (handler->pCharacteristics[i] == pCharacteristic) {
             const char* label = handler->characteristicDefs[i].label;
-            Serial.printf("Client wrote to %s: %s\n", label, value.c_str());
+            // Serial.printf("Client wrote to %s: %s\n", label, value.c_str());
             handler->onCharacteristicWrite(label, value);
             break;
         }
@@ -125,12 +125,12 @@ void NimBLEHandler::onCharacteristicWrite(const char* label, const std::string& 
     // Handle different characteristics
     if (strcmp(label, "ModeType") == 0) {
         // Handle mode change from client
-        Serial.printf("Mode changed to: %s\n", value.c_str());
+        // Serial.printf("Mode changed to: %s\n", value.c_str());
         // Add your mode handling code here
     }
     else if (strcmp(label, "ErrorString") == 0) {
         // Handle error string from client
-        Serial.printf("Error received: %s\n", value.c_str());
+        // Serial.printf("Error received: %s\n", value.c_str());
         // Add your error handling code here
     }
 }

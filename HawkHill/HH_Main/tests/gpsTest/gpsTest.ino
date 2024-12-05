@@ -42,7 +42,6 @@ void loop() {
       Serial.print("Alt: "); Serial.println(gpsHandler.getAltitude());
     }
     Serial.println("--------------------");
-    
     lastPrintTime = currentTime;
   }
 }

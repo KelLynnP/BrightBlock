@@ -6,7 +6,7 @@
 
 class Sen55Handler {
 public:
-    Sen55Handler();
+    Sen55Handler(uint8_t powerEnablePin = FiveVoltEnablePin);
     // ~Sen55Handler(); // Destructor
     void setup();
     bool pullData();
@@ -16,8 +16,10 @@ public:
     float getAmbientTemperature() const;
     float getVocIndex() const;
     float getNoxIndex() const;
+    void initializePower();
 
 private:
+    static const uint8_t POWER_PIN = 35; // I35 pin 7
     SensirionI2CSen5x sen5x;
     struct Sen55Data {
         float massConcentrationPm1p0 = 0.0f;
@@ -32,6 +34,7 @@ private:
 
     char errorMessage[256];
     void printError(uint16_t error);
+    void initializePower();
 };
 
 #endif // SEN55HANDLER_H

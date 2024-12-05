@@ -56,7 +56,6 @@ struct SensorData {
     const char* batteryLevel = "85";
 } testData;
 
-
 class TestBLEHandler : public NimBLEHandler {
     void onCharacteristicWrite(const char* label, const std::string& value) override {
         if (strcmp(label, "ModeType") == 0) {
@@ -150,9 +149,6 @@ void sendSimSensorData() { // fix me this is cursed
     bleHandler.updateCharacteristic("ModeButtonEvent", String(simDataGenerator(0, 1, 1)).c_str());
     bleHandler.updateCharacteristic("BatteryLevel", String(simDataGenerator(0, 100, 2)).c_str());
 }
-
-
-
 
 void sendBulkData(int numberOfDataPoints) {
     String jsonData = "[";

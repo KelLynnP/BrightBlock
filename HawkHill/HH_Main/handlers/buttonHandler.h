@@ -9,6 +9,9 @@ class Button {
     void handleInterrupt(void);
     uint32_t getCount();
     void resetCount();
+    static const uint8_t logButtonPin = 14;
+    static const uint8_t modeButtonPin = 21;
+
 
   private:
     uint32_t countNumKeyPresses = 0;
