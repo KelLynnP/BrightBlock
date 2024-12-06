@@ -1,30 +1,34 @@
 #include "buttonHandler.h"
 
-void Button::setup(uint8_t irq_pin, void (*ISR_callback)(void), int value) {
+void Button::setup(uint8_t irq_pin, void (*rising_callback)(void), void (*falling_callback)(void)) {
   pinMode(irq_pin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(irq_pin), ISR_callback, value);
+  attachInterrupt(digitalPinToInterrupt(irq_pin), rising_callback, RISING);
+  attachInterrupt(digitalPinToInterrupt(irq_pin), falling_callback, FALLING);
   Serial.println("Button Initialized");
 }
 
-void Button::handleInterrupt(void) { // Button state has changed
-  Button::rightNowButtonPressTime = millis();
-  if (Button::rightNowButtonPressTime - Button::timeSinceLastPress >= Button::debounceTime) { // if we're catching a real press
-    // buttonPressed = !buttonPressed; // Invert the button state
-    Button::lastEdge = digitalRead(logButtonPin);
-
-    if (Button::lastEdge) { // if button is being pressed
-      Button::pressStartTime = Button::rightNowButtonPressTime;
+void Button::handleInterrupt(bool isRisingEdge) {
+  rightNowButtonPressTime = millis();
+  debug.lastEdgeWasRising = isRisingEdge;
+  debug.interruptCount++;
+  
+  if (rightNowButtonPressTime - timeSinceLastPress >= debounceTime) {
+    if (isRisingEdge) {
+      pressStartTime = rightNowButtonPressTime;
+      debug.lastPressDuration = 0;  // Reset duration on new press
     } 
-    else {
-      // release cases
-      uint32_t pressDuration = Button::rightNowButtonPressTime - Button::pressStartTime;
-      
-      if (pressDuration >= LONG_PRESS_DURATION ) { // if button is pressed for longer than LONG_PRESS_DURATION and the button is being released
-        longPressCount++;
-      } else { // if we're catching the release of a short press
-        shortPressCount++;
-      }
-      timeSinceLastPress = millis();
+    else if (pressStartTime > 0) {  // Only process if we've seen a rising edge
+      uint32_t pressDuration = rightNowButtonPressTime - pressStartTime;
+      debug.lastPressDuration = pressDuration;
+        if (pressDuration >= longPressDuration) {
+          longPressCount++;
+          debug.lastPressWasLong = true;
+        } else {
+          shortPressCount++;
+          debug.lastPressWasLong = false;
+        }
+      pressStartTime = 0;  // Reset for next press
+      timeSinceLastPress = rightNowButtonPressTime;
     }
   }
 }
@@ -40,4 +44,13 @@ uint32_t Button::getShortPressCount() {
 void Button::resetCount() {
   shortPressCount=0;
   longPressCount=0;
+}
+
+Button::PressCount Button::getButtonCount() {
+    if (longPressCount > 0) {
+        return {PressType::LONG_PRESS, longPressCount};
+    } else if (shortPressCount > 0) {
+        return {PressType::SHORT_PRESS, shortPressCount};
+    }
+    return {PressType::NONE, 0};
 }

@@ -1,20 +1,29 @@
 #include "../../../handlers/buttonHandler.h"
 #include "../../../handlers/buttonHandler.cpp"
 
-Button* logEventButton = new Button();
+// Button* logEventButton = new Button();
 Button* modeButton = new Button();
+bool isHigh = digitalRead(Button::modeButtonPin) == HIGH;
+
+
 void setup() {
     Serial.begin(115200);
-    logEventButton->setup(Button::logButtonPin, []{ logEventButton->handleInterrupt(); }, CHANGE);
-    modeButton->setup(Button::modeButtonPin, []{ modeButton->handleInterrupt(); }, CHANGE);
+    
+    pinMode(Button::modeButtonPin, INPUT_PULLUP);
+    attachInterrupt(
+        digitalPinToInterrupt(Button::modeButtonPin), 
+        modeButton->handleInterrupt, 
+        FALLING
+    );
+    
+    Serial.println("Change interrupt initialized");
 }
 
 void loop() {
-  Serial.println(modeButton->getCount());
-  delay(1000);
-
-  if(modeButton->getCount() > 10) {
-    Serial.println("Button pressed 10 times");
-    modeButton->resetCount();
-  }
+    Serial.print("Raw:");
+    Serial.print(digitalRead(Button::modeButtonPin));
+    Serial.print(",");
+    Serial.print("Interrupt:");
+    Serial.println(modeButton->getLastEdgeWasRising() ? 1 : 0);
+    delay(10);
 }
