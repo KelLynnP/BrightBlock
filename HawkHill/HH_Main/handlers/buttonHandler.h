@@ -14,8 +14,8 @@ class Button {
     uint32_t longPressCount = 0;
     uint32_t shortPressCount = 0;
 
-    const uint32_t debounceTime = 50;
-    const uint32_t longPressDuration = 1000;
+    const uint32_t debounceTime = 100;
+    const uint32_t longPressDuration = 2000;
 
     static void IRAM_ATTR staticISR(void* arg) {
         Button* button = (Button*)arg;
