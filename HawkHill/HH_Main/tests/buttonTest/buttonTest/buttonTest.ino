@@ -1,12 +1,16 @@
 #include "../../../handlers/buttonHandler.h"
 #include "../../../handlers/buttonHandler.cpp"
 
-Button* modeButton = new Button(Button::modeButtonPin);
+Button* modeButton;
 
 void setup() {
     Serial.begin(115200);
     while (!Serial) delay(10);
     Serial.println("\nButton Test Starting...");
+    
+    modeButton = new Button(Button::modeButtonPin);
+    
+    Serial.println("Setup complete");
     Serial.println("Monitoring button presses...");
     Serial.println("Format: Short Presses, Long Presses");
 }
