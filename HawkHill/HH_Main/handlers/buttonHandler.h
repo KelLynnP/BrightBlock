@@ -5,25 +5,26 @@
 
 class Button {
   private:
+    const uint8_t pin;
     uint32_t riseTime = 0;
     uint32_t fallTime = 0;
     uint32_t timeHigh = 0; 
+    uint32_t lastInterruptTime = 0;
 
     uint32_t longPressCount = 0;
     uint32_t shortPressCount = 0;
 
-    const uint32_t debounceTime = 0;  // ms
-    const uint32_t longPressDuration = 1000;  // ms
-
-
-    uint32_t getLongPressCount();
-    uint32_t getShortPressCount();
+    const uint32_t debounceTime = 50;
+    const uint32_t longPressDuration = 1000;
 
   public:
-    static const uint8_t logButtonPin = 14;  
-    static const uint8_t modeButtonPin = 21;
-
-    void setup(uint8_t irq_pin, void (*rising_callback)(void), void (*falling_callback)(void));
+    Button(uint8_t buttonPin) : pin(buttonPin) {
+        pinMode(pin, INPUT);
+        attachInterrupt(digitalPinToInterrupt(pin), 
+                       [this]() { this->handleInterrupt(); }, 
+                       CHANGE);
+    }
+    
     void handleInterrupt();
 
     void resetCount();
@@ -40,6 +41,11 @@ class Button {
     };
 
     PressCount getButtonCount();
+    uint32_t getLongPressCount();
+    uint32_t getShortPressCount();
+
+    static const uint8_t logButtonPin = 14;  
+    static const uint8_t modeButtonPin = 21;
 };
 
 #endif //BUTTONHANDLER_H

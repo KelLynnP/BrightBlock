@@ -1,29 +1,30 @@
 #include "../../../handlers/buttonHandler.h"
 #include "../../../handlers/buttonHandler.cpp"
 
-// Button* logEventButton = new Button();
-Button* modeButton = new Button();
-bool isHigh = digitalRead(Button::modeButtonPin) == HIGH;
-
+Button* modeButton = new Button(Button::modeButtonPin);
 
 void setup() {
     Serial.begin(115200);
-    
-    pinMode(Button::modeButtonPin, INPUT_PULLUP);
-    attachInterrupt(
-        digitalPinToInterrupt(Button::modeButtonPin), 
-        modeButton->handleInterrupt, 
-        FALLING
-    );
-    
-    Serial.println("Change interrupt initialized");
+    while (!Serial) delay(10);
+    Serial.println("\nButton Test Starting...");
+    Serial.println("Monitoring button presses...");
+    Serial.println("Format: Short Presses, Long Presses");
 }
 
 void loop() {
-    Serial.print("Raw:");
-    Serial.print(digitalRead(Button::modeButtonPin));
-    Serial.print(",");
-    Serial.print("Interrupt:");
-    Serial.println(modeButton->getLastEdgeWasRising() ? 1 : 0);
-    delay(10);
+    static uint32_t lastPrint = 0;
+    uint32_t now = millis();
+    
+    // Print counts every 500ms if they're non-zero
+    if (now - lastPrint >= 500) {
+        Button::PressCount pressCount = modeButton->getButtonCount();
+        
+        if (pressCount.type != Button::PressType::NONE) {
+            Serial.print(pressCount.type == Button::PressType::SHORT_PRESS ? "Short: " : "Long: ");
+            Serial.println(pressCount.count);
+            modeButton->resetCount();
+        }
+        
+        lastPrint = now;
+    }
 }

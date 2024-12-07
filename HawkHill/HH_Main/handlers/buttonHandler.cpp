@@ -1,37 +1,33 @@
 #include "buttonHandler.h"
 
 void Button::setup(uint8_t irq_pin, void (*rising_callback)(void), void (*falling_callback)(void)) {
-  pinMode(irq_pin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(irq_pin), rising_callback, RISING);
-  attachInterrupt(digitalPinToInterrupt(irq_pin), falling_callback, FALLING);
+  attachInterrupt(digitalPinToInterrupt(irq_pin), falling_callback, CHANGE);
   Serial.println("Button Initialized");
 }
 
-void Button::handleInterrupt(bool isRisingEdge) {
-  rightNowButtonPressTime = millis();
-  debug.lastEdgeWasRising = isRisingEdge;
-  debug.interruptCount++;
-  
-  if (rightNowButtonPressTime - timeSinceLastPress >= debounceTime) {
-    if (isRisingEdge) {
-      pressStartTime = rightNowButtonPressTime;
-      debug.lastPressDuration = 0;  // Reset duration on new press
-    } 
-    else if (pressStartTime > 0) {  // Only process if we've seen a rising edge
-      uint32_t pressDuration = rightNowButtonPressTime - pressStartTime;
-      debug.lastPressDuration = pressDuration;
-        if (pressDuration >= longPressDuration) {
-          longPressCount++;
-          debug.lastPressWasLong = true;
-        } else {
-          shortPressCount++;
-          debug.lastPressWasLong = false;
+void Button::handleInterrupt() {
+    uint32_t now = millis();
+    if (now - lastInterruptTime >= debounceTime) {
+        bool pinState = GPIO.in & (1 << pin);  // Use instance pin instead of static pin
+        
+        if (pinState) {  // Rising edge
+            riseTime = now;
+        } else {         // Falling edge
+            fallTime = now;
+            uint32_t pressTime = fallTime - riseTime;
+            
+            if (pressTime >= longPressDuration) {
+                longPressCount++;
+            } else if (pressTime > debounceTime) {  // Ensure it's a real press
+                shortPressCount++;
+            }
         }
-      pressStartTime = 0;  // Reset for next press
-      timeSinceLastPress = rightNowButtonPressTime;
+        
+        lastInterruptTime = now;
     }
-  }
 }
+
+void Button::setCounts() {
 
 uint32_t Button::getLongPressCount() {
   return longPressCount;
@@ -54,3 +50,4 @@ Button::PressCount Button::getButtonCount() {
     }
     return {PressType::NONE, 0};
 }
+
