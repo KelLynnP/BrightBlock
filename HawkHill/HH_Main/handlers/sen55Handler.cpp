@@ -3,13 +3,23 @@
 Sen55Handler::Sen55Handler() : data(), errorMessage() {
 }
 
-void Sen55Handler::initializePower() {
+Sen55Handler::~Sen55Handler() {
+    disable5VPower();
+}
+
+void Sen55Handler::enable5VPower() {
     pinMode(POWER_PIN, OUTPUT);
     digitalWrite(POWER_PIN, HIGH);
+    Serial.println("5V initialized");
+}
+
+void Sen55Handler::disable5VPower() {
+    digitalWrite(POWER_PIN, LOW);
+    Serial.println("5V disabled");
 }
 
 void Sen55Handler::setup() {
-    initializePower();
+    enable5VPower();
     Wire.begin();
     sen5x.begin(Wire);
     uint16_t error;
@@ -61,3 +71,4 @@ void Sen55Handler::printError(uint16_t error) {
     errorToString(error, errorMessage, 256);
     Serial.println(errorMessage);
 }
+

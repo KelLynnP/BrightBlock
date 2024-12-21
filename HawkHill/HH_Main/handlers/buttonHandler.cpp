@@ -8,7 +8,7 @@ void Button::handleInterrupt() {
         debugInfo.pinState = pinState;
         debugInfo.lastInterruptTime = now;
         
-        if (!pinState) {  // Rising edge
+        if (!pinState) {  // Rising edge (Pullup, so High is default)
             riseTime = now;
             debugInfo.isRise = true;
         } else {         // Falling edge

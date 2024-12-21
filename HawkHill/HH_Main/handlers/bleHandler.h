@@ -64,7 +64,8 @@ private:
     // Add callback handler
     CharacteristicCallbacks* pCharCallbacks;
     
-    // Add status codes as static members
+    
+    // Add status codes as static members, transmitted through error strings
     static constexpr const char* STATUS_IDLE = "0";
     static constexpr const char* STATUS_NORMAL = "1";
     static constexpr const char* STATUS_TRANSMITTING = "2";
