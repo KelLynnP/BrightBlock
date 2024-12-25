@@ -1,30 +1,41 @@
 #include "../../handlers/sen55Handler.h"
 #include "../../handlers/sen55Handler.cpp"
 
+// Define custom I2C pins
+static const int CUSTOM_SDA = 23;
+static const int CUSTOM_SCL = 22;
+
 Sen55Handler sen55;
 
 void setup() {
     Serial.begin(115200);
-    // while (!Serial) delay(10);
-    sen55.enable5VPower();
-    Serial.println("Setup complete");
+    
+    // Print default I2C pins
+    Serial.println("Default I2C Pins:");
     Serial.printf("Default SDA: %d\n", SDA);
     Serial.printf("Default SCL: %d\n", SCL);
     
-    // pinMode(33, OUTPUT);
-    // digitalWrite(33, HIGH);
-    delay(1000);
+    // Print custom I2C pins
+    Serial.println("\nUsing Custom I2C Pins:");
+    Serial.printf("Custom SDA: %d\n", CUSTOM_SDA);
+    Serial.printf("Custom SCL: %d\n", CUSTOM_SCL);
+    
+    // Initialize I2C with custom pins
+    Wire.begin(CUSTOM_SDA, CUSTOM_SCL);
+    
+    sen55.setup();
+    Serial.println("SEN55 Setup Complete");
 }
 
 void loop() {
-
-  // sen55.enable5VPower();
-  // delay(5000);
-  // Serial.println("5V Power Enabled");
-
-
-  // sen55.disable5VPower();
-  // delay(5000);
-  // Serial.println("5V Power Disabled");
-
+    if (sen55.pullData()) {
+        Serial.println("\nNew Reading:");
+        Serial.printf("PM2.5: %.2f µg/m³\n", sen55.getPm2p5());
+        Serial.printf("Temperature: %.2f °C\n", sen55.getAmbientTemperature());
+        Serial.printf("Humidity: %.2f %%RH\n", sen55.getAmbientHumidity());
+        Serial.printf("VOC Index: %.2f\n", sen55.getVocIndex());
+        Serial.printf("NOx Index: %.2f\n", sen55.getNoxIndex());
+    }
+    
+    delay(1000);
 }

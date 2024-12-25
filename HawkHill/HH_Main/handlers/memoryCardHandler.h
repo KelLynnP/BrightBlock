@@ -7,6 +7,9 @@
 
 class MemoryCardHandler {
 
+
+    mosi 
+
 private:
     int eventCounter = -1;
     const char eventIndexPath[30] = "/eventIndex.json"; 

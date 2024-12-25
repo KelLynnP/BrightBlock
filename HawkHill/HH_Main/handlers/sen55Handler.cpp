@@ -20,7 +20,6 @@ void Sen55Handler::disable5VPower() {
 
 void Sen55Handler::setup() {
     enable5VPower();
-    Wire.begin();
     sen5x.begin(Wire);
     uint16_t error;
     error = sen5x.startMeasurement(); 
