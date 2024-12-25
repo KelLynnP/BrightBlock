@@ -1,14 +1,16 @@
+#include <Arduino.h>
+#include <SPI.h>
+#include <SD.h>
 #include "memoryCardHandler.h"
 #include "FS.h"  // Memory Card files
-#include "SD.h"
-#include "SPI.h"
 
 void MemoryCardHandler::setup() {
     if (!SD.begin(memoryCardPin)) {
         Serial.println("Card Mount Failed");
         return;
     }
-  uint8_t cardType = SD.cardType();
+  
+  MemoryCardHandler::cardType = SD.cardType();
 
   if (cardType == CARD_NONE) {
     Serial.println("No SD card attached");
@@ -16,16 +18,22 @@ void MemoryCardHandler::setup() {
   }
 
   Serial.print("SD Card Type: ");
-  if (cardType == CARD_MMC) {
+  if (MemoryCardHandler::cardType == CARD_MMC) {
     Serial.println("MMC");
-  } else if (cardType == CARD_SD) {
+  } else if (MemoryCardHandler::cardType == CARD_SD) {
     Serial.println("SDSC");
-  } else if (cardType == CARD_SDHC) {
+  } else if (MemoryCardHandler::cardType == CARD_SDHC) {
     Serial.println("SDHC");
   } else {
     Serial.println("UNKNOWN");
   }
-  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+  MemoryCardHandler::cardSize = SD.cardSize() / (1024 * 1024);
+  Serial.printf("SD Card Size: %llu MB\n", MemoryCardHandler::cardSize);
+
+  // if (!SD.exists(MemoryCardHandler::eventIndexPath)) {
+  //   createEventIndexFile();
+  // }
+
 }
 
 void MemoryCardHandler::setNewDataEvent(){
@@ -38,35 +46,36 @@ void MemoryCardHandler::setNewDataEvent(){
 }
 
 int MemoryCardHandler::PullLastEventIndex() { 
-  Serial.println("Starting PullLastEventIndex ");
-  File file = SD.open(MemoryCardHandler::eventIndexPath, FILE_READ);
-  String line;
-  if (!file) {
-    Serial.println("Failed to open file for appending");
-    return -1;
-  }
+  return 0;
+//   Serial.println("Starting PullLastEventIndex ");
+//   File file = SD.open(MemoryCardHandler::eventIndexPath, FILE_READ);
+//   String line;
+//   if (!file) {
+//     Serial.println("Failed to open file for appending");
+//     return -1;
+//   }
 
-  while (file.available()) {
-    line = file.readStringUntil(',');
-    Serial.println(line);
-  }
-  int numLine = 0;
-  try {
-      numLine = std::stoi(line.c_str());
-  } catch (const std::exception& e) {
-      Serial.println("Error converting string to integer");
-      Serial.println(e.what());
-  }
+//   while (file.available()) {
+//     line = file.readStringUntil(',');
+//     Serial.println(line);
+//   }
+//   int numLine = 0;
+//   try {
+//       numLine = std::stoi(line.c_str());
+//   } catch (const std::exception& e) {
+//       Serial.println("Error converting string to integer");
+//       Serial.println(e.what());
+//   }
 
-  std::string numLinePlusOne = std::to_string(numLine + 1);
-  numLinePlusOne += ',';
-   if (printOut){
-    Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
-    Serial.println(numLinePlusOne.c_str());
-   }
-  file.close();
-  appendFile(MemoryCardHandler::eventIndexPath, numLinePlusOne.c_str());
-  return numLine;
+//   std::string numLinePlusOne = std::to_string(numLine + 1);
+//   numLinePlusOne += ',';
+//    if (printOut){
+//     Serial.printf("Appending to file: %s\n", MemoryCardHandler::eventIndexPath);
+//     Serial.println(numLinePlusOne.c_str());
+//    }
+//   file.close();
+//   appendFile(MemoryCardHandler::eventIndexPath, numLinePlusOne.c_str());
+//   return numLine;
 }
 
 void  MemoryCardHandler::writeFile(const char* path, const char* message) {

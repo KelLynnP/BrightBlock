@@ -8,6 +8,9 @@ void setup() {
     // while (!Serial) delay(10);
     sen55.enable5VPower();
     Serial.println("Setup complete");
+    Serial.printf("Default SDA: %d\n", SDA);
+    Serial.printf("Default SCL: %d\n", SCL);
+    
     // pinMode(33, OUTPUT);
     // digitalWrite(33, HIGH);
     delay(1000);
